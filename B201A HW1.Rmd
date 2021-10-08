@@ -10,35 +10,98 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+```{r packages}
+
+```
+
+
 1. Assume Z is a standard normal random variable with mean 0 and variance 1.
+
 (a) $P( Z \geq -0.5) = ?$
+
+Solution: $P( Z \geq -0.5) = P( Z < 0.5) \approx 0.69$
+
+```{r 1a}
+pnorm(0.5)
+pnorm(-0.5, lower.tail = F)
+```
 (b) $P( Z < ?) = 0.20$
+
+Solution: The Z-score that corresponds to a probability of 0.20 under the standard normal distribution is $Z \approx -0.84$.
+
+```{r 1b}
+qnorm(0.20)
+qnorm(0.80, lower.tail = F)
+```
+
 (c) $P(-2.0 < Z < 2.0) = ?$
+
+Solution: $P(-2.0 < Z < 2.0) = P(Z > -2.0) + P(Z < 2.0) = 2*P( Z < 2.0) = 2*P(Z > -2.0) \approx 1.95$
+
+```{r}
+pnorm(-2.0, lower.tail = F) + pnorm(2.0)
+2*pnorm(-2.0, lower.tail = F)
+2*pnorm(2.0)
+```
+
 (d) For what value of $d$ is it true that $P (Z < -1.5) = P (Z > d)$?
+
+Solution: We know that the standard normal curve is unimodal and symmetric around the mode, so we can say that $P (Z < -1.5) = P (Z > d)$ is true for value of $d = 1.5$.
+
+```{r}
+pnorm(-1.5)
+lhs <- pnorm(-1.5)
+qnorm(lhs, lower.tail = F)
+```
+
+
+2. Calculate the following:
+
+(a) For a vaccine that prevents disease in 99% of the people who receive it, calculate the probability that among 1,000 people receiving the vaccine, there will be 3 or fewer people who experience the disease.
 
 ```{r}
 
 ```
 
-
-2. Calculate the following:
-(a) For a vaccine that prevents disease in 99% of the people who receive it, calculate the probability that among 1,000 people receiving the vaccine, there will be 3 or fewer people who experience the disease.
 (b) What is the smallest number of independent tosses of a fair coin, n, such that the probability of obtaining either all heads or no heads is less than 0.05?
 
 ```{r}
+
 
 ```
 
 
 3. Assume that heights in the U.S. population are normally distributed with mean 70 inches and standard deviation 4 inches.
-(a) Suppose we repeatedly take samples of size 20 from the population and calculate the sample
-mean height for each. What is the distribution of these sample means, and how does the standard deviation of this distribution relate to the standard deviation of heights in the population?
+(a) Suppose we repeatedly take samples of size 20 from the population and calculate the sample mean height for each. What is the distribution of these sample means, and how does the standard deviation of this distribution relate to the standard deviation of heights in the population?
+
+```{r}
+
+```
+
 (b) Suppose we sample 30 people from an island and are interested to know whether the average
-height is significantly different from the average height in the U.S. Suppose further that the
-sample mean of the island individuals is 68.1 inches. Set up null and alternative hypotheses for this scenario, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
-(c) Following further on the example from part (b), suppose the population standard deviation is not known, but we calculate the sample variance $s^2$ from the sample of size 30 to be 15.0
-(where, as before, the sample mean is still 68.1 inches). Again set up null and alternative hypotheses to consider whether the average height of the island population is significantly
-different from the average height in the U.S., propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
+height is significantly different from the average height in the U.S. Suppose further that the sample mean of the island individuals is 68.1 inches. Set up null and alternative hypotheses for this scenario, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
+
+Solution:
+
+$H_0: \mu_{island} = \mu_{US}$
+$H_A: \mu_{island} \neq \mu_{US}$
+
+$Z = \frac{\bar{x}-\mu}{\sigma} = \frac{68.1-70}{4} = -0.475$
+
+$P(Z < -0.475) = 0.317$
+
+```{r}
+z <- (68.1-70)/4
+pnorm(z)
+```
+
+(c) Following further on the example from part (b), suppose the population standard deviation is not known, but we calculate the sample variance $s^2$ from the sample of size 30 to be 15.0 (where, as before, the sample mean is still 68.1 inches). Again set up null and alternative hypotheses to consider whether the average height of the island population is significantly different from the average height in the U.S., propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
+
+```{r}
+
+```
+
+
 (d) Following further on the scenario in part (c), suppose we are interested to learn whether the average height of the island population is significantly different from the average height of visitors to the island airport, where a sample of size 20 visitors yields a sample mean of 70.1 inches and a sample variance of 16.2 inches. Set up null and alternative hypotheses to consider whether the average height of the island population is significantly different from the average height of island visitors, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
 
 ```{r}
@@ -47,6 +110,7 @@ different from the average height in the U.S., propose a test statistic, calcula
 
 
 4. Assuming a 99% confidence interval for $(\mu_1 - \mu_2)$ is 4.8 to 9.2, comment on whether each of the following conclusions should be supported or not, and explain your reasoning.
+
 (a) Do not reject $H_0: \mu_1 = \mu_2$ at the $\alpha = 0.05$ level if the alternative is $H_A: \mu_1 \neq \mu_2$.
 (b) Reject $H_0: \mu_1 = \mu_2$ at the $\alpha = 0.01$ level if the alternative is $H_A: \mu_1 \neq \mu_2$
 (c) Reject $H_0: \mu_1 = \mu_2$ at the $\alpha = 0.01$ level if the alternative is $H_A: \mu_1 < \mu_2$.
@@ -59,8 +123,7 @@ different from the average height in the U.S., propose a test statistic, calcula
 ```
 
 
-5. Suppose that $\bar{X_1} = 125.2$ and $\bar{X_2} = 125.4$ are the mean systolic blood pressures for two samples of
-workers from different plants in the same industry. Suppose further that a test of $H_0: \mu_1 = \mu_2$ using these samples is rejected at the $\alpha = 0.001$ level. Referring to available information as appropriate, critique each of the following possible conclusions, explaining your reasoning:
+5. Suppose that $\bar{X_1} = 125.2$ and $\bar{X_2} = 125.4$ are the mean systolic blood pressures for two samples of workers from different plants in the same industry. Suppose further that a test of $H_0: \mu_1 = \mu_2$ using these samples is rejected at the $\alpha = 0.001$ level. Referring to available information as appropriate, critique each of the following possible conclusions, explaining your reasoning:
 (a) There is a meaningful difference (clinically speaking) in population means but not a statistically significant difference.
 (b) There difference in population means is both statistically and clinically significant.
 (c) There is a statistically significant difference but not a clinically significant difference in population means.
@@ -81,8 +144,7 @@ Group C: 110, 101, 124, 106, 113, 94
 
 (a) Perform an analysis of variance, using $\alpha = 0.05$ as a significance level.
 (b) Suppose Groups A and B are thought of as “active treatment” and Group C is thought of as a “control” treatment. Provide an estimate of the mean difference between active treatment and control treatment.
-(c) If one was to conduct pairwise comparisons between all pairs of group means using a Bonferroni correction, what significance level would be used for each test to ensure that the
-“experiment-wise error rate” (i.e., the probability of at least one false finding of significance) did not exceed 0.05?
+(c) If one was to conduct pairwise comparisons between all pairs of group means using a Bonferroni correction, what significance level would be used for each test to ensure that the “experiment-wise error rate” (i.e., the probability of at least one false finding of significance) did not exceed 0.05?
 
 
 ```{r}
@@ -102,6 +164,11 @@ Current 7 114.429 31.900
 ```
 
 (a) Using connections between group means and the overall mean, between group means and the between-group sum of squares, and between the formula for the standard deviation and the within-group sum of squares, construct an ANOVA table based on the available information and carry out a test of significance at the $\alpha = 0.05$ level.
+
+```{r}
+
+```
+
 (b) In contrast to the study described in Problem 6, smoking status was not randomized in this study. Describe a possible objection to inferring that differences in respiratory function across smoking-status groups is due to the individual’s smoking experience. Also offer a possible rejoinder to such an objection, and based on all of the knowledge you have accumulated prior to entering this course, comment on whether you would be inclined to attribute any significant differences in respiratory function to differences in smoking status.
 
 ```{r}
