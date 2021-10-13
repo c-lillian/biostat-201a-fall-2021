@@ -36,12 +36,10 @@ qnorm(0.80, lower.tail = F)
 
 (c) $P(-2.0 < Z < 2.0) = ?$
 
-Solution: $P(-2.0 < Z < 2.0) = P(Z > -2.0) + P(Z < 2.0) = 2*P( Z < 2.0) = 2*P(Z > -2.0) \approx 1.95$
+Solution: $P(-2.0 < Z < 2.0) =  P(Z < 2.0) - P(Z < -2.0) =  \approx 0.954$
 
 ```{r}
-pnorm(-2.0, lower.tail = F) + pnorm(2.0)
-2*pnorm(-2.0, lower.tail = F)
-2*pnorm(2.0)
+pnorm(2.0) - pnorm(-2.0) 
 ```
 
 (d) For what value of $d$ is it true that $P (Z < -1.5) = P (Z > d)$?
@@ -65,40 +63,75 @@ qnorm(lhs, lower.tail = F)
 
 (b) What is the smallest number of independent tosses of a fair coin, n, such that the probability of obtaining either all heads or no heads is less than 0.05?
 
-```{r}
+Solution:
 
+Let n represent the number of independent tosses for a fair coin. The probability of heads of a fair coin is 0.5, and probability of tails of a fair coin is 0.5.
 
-```
+$P(either all heads or no heads) < 0.05$
+$2*P(all heads) < 0.05$
+$P(all heads) < 0.025$
+$0.5^n < 0.025$
+$ln(0.5^n) < ln(0.025)$
+$n ln(0.5) < ln(0.025)$
+$n > 5.32$
+
+The smallest number of independent tosses for a fair coin such that the probability of obtaining either all heads or no heads is less than 0.05 is $n = 6$.
 
 
 3. Assume that heights in the U.S. population are normally distributed with mean 70 inches and standard deviation 4 inches.
 (a) Suppose we repeatedly take samples of size 20 from the population and calculate the sample mean height for each. What is the distribution of these sample means, and how does the standard deviation of this distribution relate to the standard deviation of heights in the population?
 
+
+Solution:
+
+Since the distribution of a sample from a normally distributed population is given by $N(\mu, \sigma^2/n)$, the distribution of these sample mean heights is $\bar{x} \sim N(70, 0.8)$ $(\sigma^2/n = 4^2/20)$. The standard deviation of this distribution is scaled by $1/sqrt(n)$ compared to that of the standard deviation of heights in the population distribution. 
+
 ```{r}
 
 ```
 
-(b) Suppose we sample 30 people from an island and are interested to know whether the average
-height is significantly different from the average height in the U.S. Suppose further that the sample mean of the island individuals is 68.1 inches. Set up null and alternative hypotheses for this scenario, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
+(b) Suppose we sample 30 people from an island and are interested to know whether the average height is significantly different from the average height in the U.S. Suppose further that the sample mean of the island individuals is 68.1 inches. Set up null and alternative hypotheses for this scenario, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
 
 Solution:
 
 $H_0: \mu_{island} = \mu_{US}$
 $H_A: \mu_{island} \neq \mu_{US}$
 
-$Z = \frac{\bar{x}-\mu}{\sigma} = \frac{68.1-70}{4} = -0.475$
+$Z = \frac{\bar{x}-\mu}{\sigma} = \frac{68.1-70}{4/\sqrt{20}} = -2.12$
 
-$P(Z < -0.475) = 0.317$
+$p-value = P(Z < -2.12) = 0.017$
+
+For a two-tailed hypothesis test, the p-value is 0.034.
+
+Since the p-value falls below $\alpha = 0.05$, the average height from the island sample is significantly different from the average height of the U.S. population $(p = 0.034)$.
 
 ```{r}
-z <- (68.1-70)/4
+sigma <- 4/sqrt(20)
+z <- (68.1-70)/sigma
 pnorm(z)
 ```
 
 (c) Following further on the example from part (b), suppose the population standard deviation is not known, but we calculate the sample variance $s^2$ from the sample of size 30 to be 15.0 (where, as before, the sample mean is still 68.1 inches). Again set up null and alternative hypotheses to consider whether the average height of the island population is significantly different from the average height in the U.S., propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
 
-```{r}
+Solution:
 
+Since the population standard deviation is unknown, we use a t-test for our test statistic and p-value calculation.
+
+$H_0: \mu_{island} = \mu_{US}$
+$H_A: \mu_{island} \neq \mu_{US}$
+
+$t = \frac{\bar{x}-\mu}{\s} = \frac{68.1-70}{\sqrt(15)} = -0.491$
+
+$p-value = P(Z < -0.491) = 0.312$
+
+For a two-tailed hypothesis test, the p-value is 0.624.
+
+Since the p-value does not fall below $\alpha = 0.05$, the average height from the island sample is not significantly different from the average height of the U.S. population $(p = 0.034)$.
+
+```{r}
+s <- sqrt(15)
+z <- (68.1-70)/s
+pnorm(z)
 ```
 
 
