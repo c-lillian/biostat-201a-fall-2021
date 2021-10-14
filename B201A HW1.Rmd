@@ -84,11 +84,8 @@ The smallest number of independent tosses for a fair coin such that the probabil
 
 Solution:
 
-Since the distribution of a sample from a normally distributed population is given by $N(\mu, \sigma^2/n)$, the distribution of these sample mean heights is $\bar{x} \sim N(70, 0.8)$ $(\sigma^2/n = 4^2/20)$. The standard deviation of this distribution is scaled by $1/sqrt(n)$ compared to that of the standard deviation of heights in the population distribution. 
+Since the distribution of a sample from a normally distributed population is given by $N(\mu, \sigma^2/n)$, the distribution of these sample mean heights is $\bar{x} \sim N(70, 0.8)$ $(\sigma^2/n = 4^2/20)$. The standard deviation of this distribution is scaled by $1/sqrt(n)$ (and thus smaller) compared to that of the standard deviation of heights in the population distribution. Additionally, the standard deviation of this distribution of sample mean heights is equivalent to the standard error of the standard deviation of heights in the population.
 
-```{r}
-
-```
 
 (b) Suppose we sample 30 people from an island and are interested to know whether the average height is significantly different from the average height in the U.S. Suppose further that the sample mean of the island individuals is 68.1 inches. Set up null and alternative hypotheses for this scenario, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
 
@@ -97,18 +94,18 @@ Solution:
 $H_0: \mu_{island} = \mu_{US}$
 $H_A: \mu_{island} \neq \mu_{US}$
 
-$Z = \frac{\bar{x}-\mu}{\sigma} = \frac{68.1-70}{4/\sqrt{20}} = -2.12$
+$Z^* = \frac{\bar{x}-\mu}{\sigma/\sqrt{n}} = \frac{68.1-70}{4/\sqrt{20}} = -2.12$
 
-$p-value = P(Z < -2.12) = 0.017$
+$p-value = 2* P(Z \geq |-2.12|) = 0.017$
 
 For a two-tailed hypothesis test, the p-value is 0.034.
 
 Since the p-value falls below $\alpha = 0.05$, the average height from the island sample is significantly different from the average height of the U.S. population $(p = 0.034)$.
 
 ```{r}
-sigma <- 4/sqrt(20)
-z <- (68.1-70)/sigma
-pnorm(z)
+sigma <- 4
+z <- (68.1-70)/(sigma/sqrt(20))
+(pvalue <- 2*pnorm(z))
 ```
 
 (c) Following further on the example from part (b), suppose the population standard deviation is not known, but we calculate the sample variance $s^2$ from the sample of size 30 to be 15.0 (where, as before, the sample mean is still 68.1 inches). Again set up null and alternative hypotheses to consider whether the average height of the island population is significantly different from the average height in the U.S., propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
@@ -120,25 +117,49 @@ Since the population standard deviation is unknown, we use a t-test for our test
 $H_0: \mu_{island} = \mu_{US}$
 $H_A: \mu_{island} \neq \mu_{US}$
 
-$t = \frac{\bar{x}-\mu}{\s} = \frac{68.1-70}{\sqrt(15)} = -0.491$
+$t^* = \frac{\bar{x}-\mu}{s/\sqrt{n}} = \frac{68.1-70}{\sqrt{15}/\sqrt{30}} = -0.491$
 
-$p-value = P(Z < -0.491) = 0.312$
+$p-value = 2* P(t \geq |-2.687|) = 0.012$
 
-For a two-tailed hypothesis test, the p-value is 0.624.
+For a two-tailed hypothesis test, the p-value is 0.012.
 
-Since the p-value does not fall below $\alpha = 0.05$, the average height from the island sample is not significantly different from the average height of the U.S. population $(p = 0.034)$.
+Since the p-value falls below $\alpha = 0.05$, the average height from the island sample is significantly different from the average height of the U.S. population $(p = 0.012)$.
 
 ```{r}
-s <- sqrt(15)
-z <- (68.1-70)/s
-pnorm(z)
+s <- sqrt(15.0)
+t <- (68.1-70)/(s/sqrt(30))
+(pvalue <- 2*pt(t, df=29))
 ```
 
 
 (d) Following further on the scenario in part (c), suppose we are interested to learn whether the average height of the island population is significantly different from the average height of visitors to the island airport, where a sample of size 20 visitors yields a sample mean of 70.1 inches and a sample variance of 16.2 inches. Set up null and alternative hypotheses to consider whether the average height of the island population is significantly different from the average height of island visitors, propose a test statistic, calculate a p-value, and comment on whether the result appears significant at the $\alpha = 0.05$ level.
 
-```{r}
+Solution:
 
+Since this scenario is comparing two samples (where the sample of the island population is of size 30 with sample mean of 68.1 inches and sample variance of 15.0 inches, and the sample of the visitors to the island airport is of size 20 with sample mean of 70.1 inches and sample variance of 16.2 inches), we set up a two sample t test for two independent populations where the population variance is unknown for both. We assume equal variances since $s^2_{visit}/s^2_{island} = 16.2/15 = 1.08 < 3$, and thus use a pooled sample standard deviation $s_p$ for calculation of the test statistic.
+
+$H_0: \mu_{island} = \mu_{visit}$
+$H_A: \mu_{island} \neq \mu_{visit}$
+
+$TS = \frac{(\bar{x}_{island} - \bar{x}_{visit}) - (\mu_{island} - \mu_{visit})_0}{s_p\sqrt{1/n_{island} + 1/n_{visit}}}$
+$s_p = \sqrt{\frac{(n-1)s_1^2 + (m-1)s_2^2}{n+m-2}}$
+$TS = \frac{(68.1-70.1) - 0}{20.04*\sqrt{1/30 + 1/20}}$
+$p-value = 2* P(t \geq |-0.346|) = 0.731$
+
+Since the p-value does not fall below $\alpha = 0.05$, the average height from the island sample is not significantly different from the average height of the visitor sample $(p = 0.731)$.
+
+```{r}
+n <- 30
+xbar1 <- 68.1
+s1 <- 15
+m <- 20
+xbar2 <- 70.1
+s2 <- 16.2
+s_p <- sqrt(((n-1)*s1^2 + (m-1)*s2^2)/n+m-2)
+
+ts <- (xbar1 - xbar2 - 0)/(s_p*sqrt(1/n + 1/m))
+
+2*pt(ts, df=n+m-2)
 ```
 
 
