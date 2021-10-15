@@ -172,6 +172,16 @@ ts <- (xbar1 - xbar2 - 0)/(s_p*sqrt(1/n + 1/m))
 (e) Do not reject $H_0: \mu_1 = \mu_2 + 3$ at the $\alpha = 0.01$ level if the alternative is $H_A: \mu_1 \neq \mu_2 + 3$
 
 
+Solution: 
+
+The form of a confidence interval for $(\mu_1 - \mu_2)$ is $(\mu_1 - \mu_2) +/- t_{n+m-2}$
+
+a) do not support
+b) support
+c) do not support
+d) do not support
+e) support
+
 ```{r}
 
 ```
