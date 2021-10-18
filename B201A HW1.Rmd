@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r packages}
-
+library(tidyverse)
+library(kableExtra)
 ```
 
 
@@ -207,11 +208,34 @@ Group B: 132, 105, 144, 136, 132, 159
 Group C: 110, 101, 124, 106, 113, 94
 
 (a) Perform an analysis of variance, using $\alpha = 0.05$ as a significance level.
+
+Solution: Because the p-value for this one-way ANOVA is $p = 0.0316$, we can say that we reject the null that $H_0: \mu_A = \mu_B = \mu_C$ and conclude that at least one of the group means is different from each other.
+
+```{r}
+q6 <- data.frame(score = c(156, 119, 100, 170, 130, 154, 
+                           132, 105, 144, 136, 132, 159,
+                           110, 101, 124, 106, 113, 94), 
+                 group = c('A', 'A', 'A', 'A', 'A', 'A',
+                           'B', 'B', 'B', 'B', 'B', 'B',
+                           'C', 'C', 'C', 'C', 'C', 'C'))
+
+anova <- aov(score ~ as.factor(group), data = q6)
+summary(anova)
+
+```
+
 (b) Suppose Groups A and B are thought of as “active treatment” and Group C is thought of as a “control” treatment. Provide an estimate of the mean difference between active treatment and control treatment.
+
+
+
+
 (c) If one was to conduct pairwise comparisons between all pairs of group means using a Bonferroni correction, what significance level would be used for each test to ensure that the “experiment-wise error rate” (i.e., the probability of at least one false finding of significance) did not exceed 0.05?
+
+Solution: Using a Bonferroni correction means that the individual confidence levels for preplanned comparisons of pairs of groups means should be set at $\alpha/m$ where $m$ represents the number of preplanned comparisons. We have 3 preplanned comparisons in this scenario, so the significance level used for each test to ensure that the experiment-wise errror rate does not exceed 0.05 is 0.05/3 = 0.0167.
 
 
 ```{r}
+(bonferroni.sig <- 0.05/3)
 
 ```
 
@@ -230,12 +254,35 @@ Current 7 114.429 31.900
 (a) Using connections between group means and the overall mean, between group means and the between-group sum of squares, and between the formula for the standard deviation and the within-group sum of squares, construct an ANOVA table based on the available information and carry out a test of significance at the $\alpha = 0.05$ level.
 
 ```{r}
+options(knitr.kable.NA = '')
+k <- 3
+N <- 21+44+7
+df_b <- k-1
+df_w <- N-k
+df_tot <- N-1
+grandmean <- (21*82.143 + 44*84.250 + 7*114.429)/N
+mean11 <- 82.143
+mean12 <- 84.250
+mean13 <- 114.250
+ssb <- 21*(82.143-grandmean)^2 + 44*(84.250-grandmean)^2 + 7*(114.429-grandmean)^2
+ssw <- 20*(30.436)^2 + 43*(29.298)^2 + 6*(31.900)^2
+msb <- ssb/df_b
+msw <- ssw/df_w
+Fstat <- msb/msw
+p <- 1 - pf(Fstat, k-1, N-k)
+
+q7a <- data.frame(Source = c("Between groups (Treatment)", "Within groups (Error)", "Total"),
+                  df = c(k-1, N-k, N-1),
+                  SS = c(ssb, ssw, ssb+ssw),
+                  MS = c(msb, msw, (ssb+ssw)/(N-1)),
+                  F = c(Fstat, NA, NA),
+                  p = c(p, NA, NA))
+
+kbl(q7a, booktabs = T, caption = "ANOVA Table for Data of Respiratory Function Among Individuals with Different Smoking Status") %>% 
+  kable_styling(latex_options = c("hold_position"))
 
 ```
 
 (b) In contrast to the study described in Problem 6, smoking status was not randomized in this study. Describe a possible objection to inferring that differences in respiratory function across smoking-status groups is due to the individual’s smoking experience. Also offer a possible rejoinder to such an objection, and based on all of the knowledge you have accumulated prior to entering this course, comment on whether you would be inclined to attribute any significant differences in respiratory function to differences in smoking status.
 
-```{r}
-
-```
-
+Solution: We cannot accurately infer that differences in respiratory function across smoking-status groups is due to the individual's smoking experience because there may be innate group differences / possible confounders that would normally be minimized with randomization present in the study. As such, these 3 groups may not be comparable to each other since we do not know if they have the same sample characteristics for possible confounders like age, sex, weight, etc, all of which may contribute to respiratory lung function. A possible rejoinder would be that 
