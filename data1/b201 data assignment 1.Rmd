@@ -1,0 +1,19 @@
+---
+title: "B201A Data Assignment 1"
+author: "Lillian Chen"
+date: "11/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+```
+
+
+```{r}
+read_sas(data_file = "senic.sas7bdat")
+
+```
+
