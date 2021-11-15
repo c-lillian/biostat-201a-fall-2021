@@ -9,11 +9,188 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(haven)
+library(gtsummary)
+library(ggplot2)
+library(ggpubr)
+library(ggcorrplot)
+library(corrplot)
+```
+
+
+
+```{r import}
+
+# read in dataset
+senic <- read_sas(data_file = "senic.sas7bdat")
+
+# all relevant vars for data assignment 1
+data.vars <- senic %>% select(length, age, beds, census, risk, region)
+
+```
+
+
+```{r table1}
+
+# relevel data for table 1
+table1 <- data.vars %>% 
+  mutate(region = factor(region)) %>% 
+  mutate(region = recode_factor(region, 
+                                `1`="Northeast", 
+                                `2`="North Central", 
+                                `3`="South", 
+                                `4`="West"))
+
+(table1output <- table1 %>% 
+  tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
+                             all_categorical() ~ "{n}/{N} ({p}%)"),
+              digits = all_continuous() ~ purrr::partial(style_sigfig, digits = 3),
+              label = list(length ~ "Average length of patient stay (days)",
+                           age ~ "Average patient age (years)",
+                           beds ~ "Average number of beds",
+                           census ~ "Average daily census",
+                           risk ~ "Infection risk (%)",
+                           region ~ "Geographic region")) %>% 
+  modify_header(label ~ "**Variable**") %>%
+  modify_footnote(
+    all_stat_cols() ~ "Continuous variables: Mean (SD);
+     categorical variables: n/Total N (%)"
+  ) %>%
+  modify_caption("**Table 1. Baseline Characteristics of Hospital Sites**") %>%
+  bold_labels())
+
+```
+
+
+```{r univarDistr, warning=F}
+
+# create new variable from variables `beds` and `census`
+data.vars <- data.vars %>%
+  mutate(occupancy = beds/census)
+
+# separated into continuous and categorical for ease of reference
+# leaving out occupancy for now since exploratory analysis is to be conducted
+# on only the original predictors
+cont.vars <- data.vars %>% select(length, age, beds, census, risk)
+cat.vars <- data.vars %>% select(region)
+
+# correlation plots between pairs of continuous variables
+M <- cor(cont.vars)
+
+# using corrplot::corrplot()
+p.M <- cor.mtest(cont.vars, conf.level = 0.95)
+
+p.M$p[upper.tri(p.M$p)] <- 1
+col4 <- colorRampPalette(c('#7F0000', 'red', '#FF7F00', 'yellow', '#7FFF7F',
+                           'cyan', '#007FFF', 'blue', '#00007F'))
+corrplot.mixed(M, lower = 'ellipse', upper = 'number', tl.pos = 'lt', diag = 'n',
+               lower.col = col4(200), upper.col = col4(200),
+               p.mat = p.M$p, sig.level = c(0.0001, 0.001, 0.01, 0.05), 
+               pch.cex = 1, insig = 'label_sig', pch.col = 'red', tl.col = 'black', tl.srt = 45)
+
+corrplot(M, method= 'ellipse', type = 'upper', diag = F, 
+         p.mat = p.M$p, sig.level = c(0.0001, 0.001, 0.01, 0.05), pch.cex = 0.9,
+         insig = 'label_sig', pch.col = 'red',
+         tl.col = 'black', tl.srt = 45)
+
+# using PerformanceAnalytics::chart.Correlation()
+# each sig level associated w/ symbol : 
+# p-values(0, 0.001, 0.01, 0.05, 0.1, 1) <=> symbols("***", "**", "*", ".", " ")
+# we see correlation significant at the 0.05 level (age&length) and at the <.001 level
+PerformanceAnalytics::chart.Correlation(cont.vars, histogram=TRUE, pch=16)
+
+h.length <- gghistogram(cont.vars, x = "length", add = "mean", color = "black", fill = "grey", add_density = T)
+h.age <- gghistogram(cont.vars, x = "age", add = "mean", color = "black", fill = "grey", add_density = T)
+h.beds <- gghistogram(cont.vars, x = "beds", add = "mean", color = "black", fill = "grey", add_density = T)
+h.census <- gghistogram(cont.vars, x = "census", add = "mean", color = "black", fill = "grey", add_density = T)
+h.risk <- gghistogram(cont.vars, x = "risk", add = "mean", color = "black", fill = "grey", add_density = T)
+
+histograms <- ggarrange(h.length, h.age, h.beds, h.census, h.risk,
+                        labels = c("A", "B", "C", "D", "E"),
+                        nrow = 2, ncol = 3)
+
+histograms
+
 ```
 
 
 ```{r}
-read_sas(data_file = "senic.sas7bdat")
+
+data.vars <- data.vars %>% 
+  mutate(log.length = log(length),
+         log.beds = log(beds),
+         log.census = log(census),
+         log.occupancy = log(occupancy))
+
+cont.vars <- data.vars %>% select(length, log.length, age, beds, log.beds, 
+                                  census, log.census, risk, occupancy, log.occupancy)
+
+h.loglength <- gghistogram(cont.vars, x = "log.length", add = "mean", color = "black", fill = "grey")
+h.logbeds <- gghistogram(cont.vars, x = "log.beds", add = "mean", color = "black", fill = "grey")
+h.logcensus <- gghistogram(cont.vars, x = "log.census", add = "mean", color = "black", fill = "grey")
+h.logoccupancy <- gghistogram(cont.vars, x = "log.occupancy", add = "mean", color = "black", fill = "grey")
+histograms.log <- ggarrange(h.loglength, h.logbeds, h.logcensus, h.logoccupancy,
+                        labels = c("A", "B", "C", "D"),
+                        nrow = 2, ncol = 2)
+
+histograms.log
+
+```
+
+```{r simpleLinearReg}
+
+#without transformations
+lrx1 <- lm(log.length~age, data=data.vars)
+lrx2 <- lm(log.length~log.beds, data=data.vars)
+lrx3 <- lm(log.length~log.census, data=data.vars)
+lrx4 <- lm(log.length~risk, data=data.vars)
+lrx6 <- lm(log.length~log.occupancy, data=data.vars)
+
+summary(lrx1)
+plot(lrx1, which = 1)
+plot(lrx1, which = 2)
+summary(lrx2)
+plot(lrx2, which = 1)
+plot(lrx2, which = 2)
+summary(lrx3)
+plot(lrx3, which = 1)
+plot(lrx3, which = 2)
+summary(lrx4)
+plot(lrx4, which = 1)
+plot(lrx4, which = 2)
+summary(lrx6)
+plot(lrx6, which = 1)
+plot(lrx6, which = 2)
+
+```
+```{r stratifiedSimpleLinearReg}
+
+#stratify by region
+nedata <- data.vars %>% filter(region == 1)
+ncdata <- data.vars %>% filter(region == 2)
+sdata <- data.vars %>% filter(region == 3)
+wdata <- data.vars %>% filter(region == 4)
+
+x4r1 <- lm(log.length~risk, data=nedata)
+x4r2 <- lm(log.length~risk, data=ncdata)
+x4r3 <- lm(log.length~risk, data=sdata)
+x4r4 <- lm(log.length~risk, data=wdata)
+
+summary(x4r1)
+ggscatter(nedata, x = "risk", y = "log.length", add = "reg.line") +
+  stat_cor(label.x = 3, label.y = 2.55) +
+  stat_regline_equation(label.x = 3, label.y = 2.5)
+summary(x4r2)
+ggscatter(ncdata, x = "risk", y = "log.length", add = "reg.line") +
+  stat_cor(label.x = 1.5, label.y = 2.325) +
+  stat_regline_equation(label.x = 1.5, label.y = 2.3)
+summary(x4r3)
+ggscatter(sdata, x = "risk", y = "log.length", add = "reg.line") +
+    stat_cor(label.x = 1.5, label.y = 2.325) +
+  stat_regline_equation(label.x = 1.5, label.y = 2.3)
+summary(x4r4)
+ggscatter(wdata, x = "risk", y = "log.length", add = "reg.line") +
+    stat_cor(label.x = 3, label.y = 2.15) +
+  stat_regline_equation(label.x = 3, label.y = 2.125)
 
 ```
 
