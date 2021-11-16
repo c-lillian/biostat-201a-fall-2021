@@ -12,7 +12,6 @@ library(haven)
 library(gtsummary)
 library(ggplot2)
 library(ggpubr)
-library(ggcorrplot)
 library(corrplot)
 ```
 
@@ -65,7 +64,8 @@ table1 <- data.vars %>%
 
 # create new variable from variables `beds` and `census`
 data.vars <- data.vars %>%
-  mutate(occupancy = beds/census)
+  mutate(occupancy = beds/census,
+         region = as.factor(region)) 
 
 # separated into continuous and categorical for ease of reference
 # leaving out occupancy for now since exploratory analysis is to be conducted
@@ -191,6 +191,23 @@ summary(x4r4)
 ggscatter(wdata, x = "risk", y = "log.length", add = "reg.line") +
     stat_cor(label.x = 3, label.y = 2.15) +
   stat_regline_equation(label.x = 3, label.y = 2.125)
+
+```
+
+
+```{r regionalANOVA}
+
+reganova <- aov(log.length ~ region, data=data.vars)
+
+summary(reganova)
+
+reglr <- lm(log.length~region, data = data.vars)
+summary(reglr)
+pairwise.t.test(data.vars$log.length, data.vars$region, p.adj = "none")
+
+#use Tukey-Kramer Method since regions are of unequal size
+TukeyHSD(reganova)
+
 
 ```
 
