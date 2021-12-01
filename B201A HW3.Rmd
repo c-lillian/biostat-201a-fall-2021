@@ -17,7 +17,7 @@ Homework 3
 Due Wednesday, Dec. 1, 2021
 
 
-1.	Consider further the data from Homework 2, Problem 3.
+1. Consider further the data from Homework 2, Problem 3.
 		
 ```{r}
 valiumdata <- data.frame(S = c(32,42,52,61,62,65,66),
@@ -29,7 +29,7 @@ kbl(valiumdata, booktabs = T,
 ```
 
 
-1.(a)  For the regression of $S$ on $C$, calculate the least-squares estimate of the intercept, slope, and residual variance.
+1.(a) For the regression of $S$ on $C$, calculate the least-squares estimate of the intercept, slope, and residual variance.
 
 Solution: The least-squares estimates of the intercept and slope, respectively, are $\beta_0 = -8.19$ and $\beta_1=6.68$. The residual variance is the square of the residual standard error, which is $\sigma^2 = (3.903)^2 = 15.2$
 
@@ -42,7 +42,7 @@ summary(lm)
 ```
 
 
-1.(b)  Calculate the standard error of the slope and the standard error of the intercept, and comment on whether each of these parameters is significantly different from 0.
+1.(b) Calculate the standard error of the slope and the standard error of the intercept, and comment on whether each of these parameters is significantly different from 0.
 
 Solution: The standard error of the intercept is 8.12, and the standard error of the slope is 0.853. We test whether each of these standard errors is significantly different from 0 by running a two-sided t-test ($t = \beta_j / SE(\beta_j)$ for $j = 0,1$) The intercept for the regression of S on C is not significantly different from 0 at the $\alpha = 0.05$ level ($p=.359$). The slope for the regression of S on C is significantly different from 0 at the $\alpha=0.05$ level ($p<.001$).
 
@@ -51,7 +51,7 @@ summary(lm)
 ```
 
 
-1.(c)  Comment on what the findings from 1.(a) and 1.(b) tell you about whether the correlation is significantly different from 0.
+1.(c) Comment on what the findings from 1.(a) and 1.(b) tell you about whether the correlation is significantly different from 0.
 
 Solution: The standard error of the slope in part b) has a significance at the $\alpha = 0.05$ level, indicating that the slope for the regression of S on C is significantly different from 0 and that there is a positive relationship for every 1-unit change in the predictor $S$. This implies that the correlation $\rho$ should also be positive and significantly different from 0.
 
@@ -64,7 +64,7 @@ Solution: The proportion of variation in $S$ explained by $C$ is equivalent to t
 summary(lm)$r.squared
 ```
 
-1.(e)  Provide a 95% confidence interval for the expected sedation score associated with a cortisol level of 10.0.
+1.(e) Provide a 95% confidence interval for the expected sedation score associated with a cortisol level of 10.0.
 
 Solution: The 95% confidence interval for an individual who has a cortisol level of 10.0 is [54.5, 62.6].
 
@@ -79,7 +79,7 @@ predinte[3]-predinte[2]
 ```
 
 
-1.(f)  Provide a 95% confidence interval for the expected sedation score associated with a cortisol level of 5.0, and explain in a sentence why the width of the interval is different from the width of the interval in part 1.(e).
+1.(f) Provide a 95% confidence interval for the expected sedation score associated with a cortisol level of 5.0, and explain in a sentence why the width of the interval is different from the width of the interval in part 1.(e).
 
 Solution: The 95% confidence interval for an individual who has a cortisol level of 5.0 is [14.9, 35.5], with a width of 20.6. The width of this confidence interval is larger than the width of the 95% confidence interval for a cortisol level of 10.0 (8.1) as calculated in part 1.(e) because the data point of 5.0 falls far from and outside the range of observed cortisol levels, which leads to wider confidence intervals; the data point of 10.0 is much closer to the mean of the observed cortisol levels, leading to a narrower confidence interval.
 
@@ -94,7 +94,7 @@ predintf[3]-predintf[2]
 ```
 
 
-1.(g)  Provide a 95% prediction interval (i.e., a 95% confidence interval for a new individual observation) for an individual who has a cortisol level of 10.0, and explain in a sentence why the width of the interval is different from the width of the interval in part 1.(e).
+1.(g) Provide a 95% prediction interval (i.e., a 95% confidence interval for a new individual observation) for an individual who has a cortisol level of 10.0, and explain in a sentence why the width of the interval is different from the width of the interval in part 1.(e).
 
 Solution: The 95% prediction interval for an individual who has a cortisol level of 10.0 is [47.7, 69.4]. The width of this prediction interval is 21.6, as compared to the confidence interval of width 8.1 for a cortisol level of 10.0. The difference in interval width (where the prediction interval is larger than the confidence interval) can be attributed to the additional variability associated with variation of individual observations around the regression line for a prediction interval (while already including uncertainty of the predicted mean), whereas a confidence interval does not account for this variation and merely accounts for uncertainty in the predicted mean.
 
@@ -108,7 +108,7 @@ newCg <- data.frame(C=10.0)
 predintg[3]-predintg[2]
 ```
 
-1.(h)  Consider two new observations, one with a cortisol level of 5.0 and the other with a cortisol level of 10.0, and consider the corresponding prediction intervals obtained from fitting a linear regression model to the data above.  Would you regard the intervals as equally likely to cover the observed sedation scores, or would you consider one of the intervals as more likely to cover the corresponding observed sedation score than the other?  Explain your reasoning in a sentence.
+1.(h) Consider two new observations, one with a cortisol level of 5.0 and the other with a cortisol level of 10.0, and consider the corresponding prediction intervals obtained from fitting a linear regression model to the data above.  Would you regard the intervals as equally likely to cover the observed sedation scores, or would you consider one of the intervals as more likely to cover the corresponding observed sedation score than the other?  Explain your reasoning in a sentence.
 
 Solution: The prediction interval corresponding to the cortisol level of 5.0 is more likely to cover the corresponding observed sedation score as opposed to the other option, because it is extremely wide due to the value of cortisol level falling outside the range of observed cortisol levels -- intervals get wider the farther they are from the mean of the predictor. 
 
@@ -119,7 +119,7 @@ predict(lm, newdata = newCh, interval = 'prediction', level = 0.95)
 
 
 
-2.	Suppose you are interested to compare whether there is a significant difference in the average number of hours of sleep per week night obtained by male and female UCLA undergraduates. Suppose the standard deviation of the number of hours of sleep per week night is 1 hour in both groups, and you would regard the result as scientifically interesting if there was a difference on average of as much as half an hour per week night.  Assume that plans call for a study with the same number of male and female undergraduates and that it is desired to have at least 80% power for a test at the $\alpha = 0.05$ level.  Drawing on tabled information in your course reader or another similar source, how many subjects per group would be needed?
+2. Suppose you are interested to compare whether there is a significant difference in the average number of hours of sleep per week night obtained by male and female UCLA undergraduates. Suppose the standard deviation of the number of hours of sleep per week night is 1 hour in both groups, and you would regard the result as scientifically interesting if there was a difference on average of as much as half an hour per week night.  Assume that plans call for a study with the same number of male and female undergraduates and that it is desired to have at least 80% power for a test at the $\alpha = 0.05$ level.  Drawing on tabled information in your course reader or another similar source, how many subjects per group would be needed?
 
 Solution:
 
@@ -133,7 +133,7 @@ power.t.test(n = NULL, delta = 0.5, sd = 1, sig.level = 0.05, power = 0.80, type
 
 
 
-3.	Suppose you are asked to compare the proportions of male and female UCLA undergraduates who are able to continue for as long as 15 minutes on a treadmill stress test following a protocol where the slope of the incline and the speed of the treadmill increase in stages every 3 minutes.  Suppose also you are told it would be scientifically interesting if the difference in the proportions was as much as 10%.  Assume further that you do not have a good estimate in advance of the underlying proportions in the two groups but that regardless of the values of the underlying proportions, you would like to have at least 80% power to find a difference of as much as 10% in the proportions using a test at the $\alpha = 0.05$.  Drawing on tabled information in your course reader or another similar source, what would be a good total number of subjects to include in the study?  Explain your reasoning in a sentence or two.
+3. Suppose you are asked to compare the proportions of male and female UCLA undergraduates who are able to continue for as long as 15 minutes on a treadmill stress test following a protocol where the slope of the incline and the speed of the treadmill increase in stages every 3 minutes.  Suppose also you are told it would be scientifically interesting if the difference in the proportions was as much as 10%.  Assume further that you do not have a good estimate in advance of the underlying proportions in the two groups but that regardless of the values of the underlying proportions, you would like to have at least 80% power to find a difference of as much as 10% in the proportions using a test at the $\alpha = 0.05$.  Drawing on tabled information in your course reader or another similar source, what would be a good total number of subjects to include in the study?  Explain your reasoning in a sentence or two.
 
 $H_0: p_{male} - p_{female} < 0.10$ and $H_A: p_{male} - p_{female} \geq 0.10$
 
@@ -143,7 +143,7 @@ $H_0: p_{male} - p_{female} < 0.10$ and $H_A: p_{male} - p_{female} \geq 0.10$
 
 
 
-4.	When patients are unable to eat for long periods, they must be given intravenous nutrients, a process called parenteral nutrition.  Unfortunately, patients on parenteral nutrition show increased calcium loss via their urine, sometimes losing more calcium than they are given in their intravenous fluids.  Such a calcium loss might contribute to bone loss as the body pulls calcium out of bones to try to keep the calcium level in the blood within the normal range.  In order to better understand the mechanisms of the calcium loss in urine, Lipkin and coworkers (American Journal of Clinical Nutrition, 1988; 47:515-523) measured urinary calcium UCa and related it to dietary calcium DCa , glomerular filtration rate Gfr  (a measure of kidney function), urinary sodium UNa , and dietary protein level DP .  The data are available for download from the web site for our text book: go to
+4. When patients are unable to eat for long periods, they must be given intravenous nutrients, a process called parenteral nutrition.  Unfortunately, patients on parenteral nutrition show increased calcium loss via their urine, sometimes losing more calcium than they are given in their intravenous fluids.  Such a calcium loss might contribute to bone loss as the body pulls calcium out of bones to try to keep the calcium level in the blood within the normal range.  In order to better understand the mechanisms of the calcium loss in urine, Lipkin and coworkers (American Journal of Clinical Nutrition, 1988; 47:515-523) measured urinary calcium UCa and related it to dietary calcium DCa , glomerular filtration rate Gfr  (a measure of kidney function), urinary sodium UNa , and dietary protein level DP .  The data are available for download from the web site for our text book: go to
 
 https://people.vetmed.wsu.edu/slinkerb/appliedregression/
 
@@ -158,7 +158,7 @@ Solution:
 ```
 
 
-4.(b)	Carry out a multiple regression analysis of UCa¬  on all four of the other variables.  Comment on which variables seem to be important determinants of UCa .  Also comment on similarities and differences with the findings from part 4.(a), and on whether you regard the separate simple regression results or the multiple regression result as more useful.
+4.(b)	Carry out a multiple regression analysis of UCa on all four of the other variables.  Comment on which variables seem to be important determinants of UCa. Also comment on similarities and differences with the findings from part 4.(a), and on whether you regard the separate simple regression results or the multiple regression result as more useful.
 
 Solution:
 
@@ -168,13 +168,13 @@ Solution:
 
 
 
-5.	When antibiotics are given to fight infections, they must be administered in such a way that the blood level of the antibiotic is high enough to kill the bacteria responsible for the infection.  Because antibiotics are usually given periodically, the blood levels change over time, rising after an injection, then falling back down until the next injection.  The interval between injections of recently introduced antibiotics has been determined by extrapolating from studies of older antibiotics.  To update knowledge pertaining to dosing schedules, Vogelman and coworkers (Journal of Infectious Disease, 1988; 158: 831-847) studied the effect of different dosing intervals on the effectiveness of several newer antibiotics against a variety of bacteria in mice.  One trial was the effectiveness of gentamicin against the bacterium Escherichia coli.  As part of their assessment of the drug, they evaluated the effectiveness of gentamicin in killing E. coli as a function of the percentage of time the blood level of the drug remained above the effective level (the so-called mean inhibitory concentration M).  Effectiveness was evaluated in terms of the number of bacterial colonies C that could be grown from the infected mice after treatment with a given dosing schedule (known as “colony-forming units”, or CFU), where the lower the value of C, the more efficacious the antibiotic.  The data are available for download from the web site for our text book: go to
+5. When antibiotics are given to fight infections, they must be administered in such a way that the blood level of the antibiotic is high enough to kill the bacteria responsible for the infection. Because antibiotics are usually given periodically, the blood levels change over time, rising after an injection, then falling back down until the next injection. The interval between injections of recently introduced antibiotics has been determined by extrapolating from studies of older antibiotics. To update knowledge pertaining to dosing schedules, Vogelman and coworkers (Journal of Infectious Disease, 1988; 158: 831-847) studied the effect of different dosing intervals on the effectiveness of several newer antibiotics against a variety of bacteria in mice.  One trial was the effectiveness of gentamicin against the bacterium Escherichia coli. As part of their assessment of the drug, they evaluated the effectiveness of gentamicin in killing E. coli as a function of the percentage of time the blood level of the drug remained above the effective level (the so-called mean inhibitory concentration M). Effectiveness was evaluated in terms of the number of bacterial colonies C that could be grown from the infected mice after treatment with a given dosing schedule (known as “colony-forming units”, or CFU), where the lower the value of C, the more efficacious the antibiotic.  The data are available for download from the web site for our text book: go to
 
 https://people.vetmed.wsu.edu/slinkerb/appliedregression/
 
-following the link to “File downloads related to the book”, scrolling down to “Data for Problems (Appendix D)”, and clicking on Table D-3.  The first column, which can be labeled Y = “log CFU difference” and which can be treated as the outcome variable, is the difference between log (base 10) of the number of colony-forming units recorded after a period of antibiotic treatment and log (base 10) of the number of colony-forming units recorded before the period of antibiotic treatment.  The second column, which can be labeled X1 = “Percentage of 24-hour period above the mean inhibitory concentration M”.  The third column can be labeled X2 = “Dose code” (where “0” refers to 1-4 hour intervals and “1” refers to 6-12 hour intervals)”. 
+following the link to “File downloads related to the book”, scrolling down to “Data for Problems (Appendix D)”, and clicking on Table D-3. The first column, which can be labeled Y = “log CFU difference” and which can be treated as the outcome variable, is the difference between log (base 10) of the number of colony-forming units recorded after a period of antibiotic treatment and log (base 10) of the number of colony-forming units recorded before the period of antibiotic treatment. The second column, which can be labeled X1 = “Percentage of 24-hour period above the mean inhibitory concentration M”. The third column can be labeled X2 = “Dose code” (where “0” refers to 1-4 hour intervals and “1” refers to 6-12 hour intervals)”. 
 
-5.(a)  Perform the regression of Y on X1 for the cases where Dose code = 0, and comment on whether X1 is a significant predictor of Y.
+5.(a) Perform the regression of Y on X1 for the cases where Dose code = 0, and comment on whether X1 is a significant predictor of Y.
 
 Solution:
 
