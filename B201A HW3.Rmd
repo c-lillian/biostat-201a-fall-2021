@@ -1,0 +1,241 @@
+---
+title: "B201A HW3"
+author: "Lillian Chen"
+date: "11/21/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(kableExtra)
+```
+
+Biostatistics 201A, Fall 2021
+Homework 3
+Due Wednesday, Dec. 1, 2021
+
+
+1.	Consider further the data from Homework 2, Problem 3.
+		
+```{r}
+valiumdata <- data.frame(S = c(32,42,52,61,62,65,66),
+                         C = c(6.6,7.4,8.8,9.7,10.5,11.8,10.7))
+kbl(valiumdata, booktabs = T, 
+    col.names = c("Sedation Score S", "Cortisol C, ug/dl")) %>% 
+  kable_styling(position = "center",
+                latex_options = c("basic", "hold_position"))
+```
+
+
+1.(a)  For the regression of $S$ on $C$, calculate the least-squares estimate of the intercept, slope, and residual variance.
+
+Solution: The least-squares estimates of the intercept and slope, respectively, are $\beta_0 = -8.19$ and $\beta_1=6.68$. The residual variance is the square of the residual standard error, which is $\sigma^2 = (3.903)^2 = 15.2$
+
+
+```{r}
+lm <- lm(S ~ C, data=valiumdata)
+summary(lm)
+(residual_sigma <-summary(lm)$sigma)
+(residual_var<- residual_sigma^2)
+```
+
+
+1.(b)  Calculate the standard error of the slope and the standard error of the intercept, and comment on whether each of these parameters is significantly different from 0.
+
+Solution: The standard error of the intercept is 8.12, and the standard error of the slope is 0.853. We test whether each of these standard errors is significantly different from 0 by running a two-sided t-test ($t = \beta_j / SE(\beta_j)$ for $j = 0,1$) The intercept for the regression of S on C is not significantly different from 0 at the $\alpha = 0.05$ level ($p=.359$). The slope for the regression of S on C is significantly different from 0 at the $\alpha=0.05$ level ($p<.001$).
+
+```{r}
+summary(lm)
+```
+
+
+1.(c)  Comment on what the findings from 1.(a) and 1.(b) tell you about whether the correlation is significantly different from 0.
+
+Solution: The standard error of the slope in part b) has a significance at the $\alpha = 0.05$ level, indicating that the slope for the regression of S on C is significantly different from 0 and that there is a positive relationship for every 1-unit change in the predictor $S$. This implies that the correlation $\rho$ should also be positive and significantly different from 0.
+
+
+1.(d)  What is the proportion of variation in $S$ explained by $C$? 
+
+Solution: The proportion of variation in $S$ explained by $C$ is equivalent to the explained variance, which is also known as $R^2$. From the regression of S on C, we see that $R^2 = 0.925$, meaning that 92.5% of the variance in S is explained by C.
+
+```{r}
+summary(lm)$r.squared
+```
+
+1.(e)  Provide a 95% confidence interval for the expected sedation score associated with a cortisol level of 10.0.
+
+Solution: The 95% confidence interval for an individual who has a cortisol level of 10.0 is [54.5, 62.6].
+
+```{r}
+newCe <- data.frame(C=10.0)
+
+# calculate confidence interval
+(predinte <- predict(lm, newdata = newCe, interval = 'confidence', level = 0.95))
+
+# width of confidence interval
+predinte[3]-predinte[2]
+```
+
+
+1.(f)  Provide a 95% confidence interval for the expected sedation score associated with a cortisol level of 5.0, and explain in a sentence why the width of the interval is different from the width of the interval in part 1.(e).
+
+Solution: The 95% confidence interval for an individual who has a cortisol level of 5.0 is [14.9, 35.5], with a width of 20.6. The width of this confidence interval is larger than the width of the 95% confidence interval for a cortisol level of 10.0 (8.1) as calculated in part 1.(e) because the data point of 5.0 falls far from and outside the range of observed cortisol levels, which leads to wider confidence intervals; the data point of 10.0 is much closer to the mean of the observed cortisol levels, leading to a narrower confidence interval.
+
+```{r}
+newCf <- data.frame(C=5.0)
+
+# calculate confidence interval
+(predintf <- predict(lm, newdata = newCf, interval = 'confidence', level = 0.95))
+
+# width of confidence interval
+predintf[3]-predintf[2]
+```
+
+
+1.(g)  Provide a 95% prediction interval (i.e., a 95% confidence interval for a new individual observation) for an individual who has a cortisol level of 10.0, and explain in a sentence why the width of the interval is different from the width of the interval in part 1.(e).
+
+Solution: The 95% prediction interval for an individual who has a cortisol level of 10.0 is [47.7, 69.4]. The width of this prediction interval is 21.6, as compared to the confidence interval of width 8.1 for a cortisol level of 10.0. The difference in interval width (where the prediction interval is larger than the confidence interval) can be attributed to the additional variability associated with variation of individual observations around the regression line for a prediction interval (while already including uncertainty of the predicted mean), whereas a confidence interval does not account for this variation and merely accounts for uncertainty in the predicted mean.
+
+```{r}
+newCg <- data.frame(C=10.0)
+
+# calculate prediction interval
+(predintg <- predict(lm, newdata = newCg, interval = 'prediction', level = 0.95))
+
+# width of prediction interval
+predintg[3]-predintg[2]
+```
+
+1.(h)  Consider two new observations, one with a cortisol level of 5.0 and the other with a cortisol level of 10.0, and consider the corresponding prediction intervals obtained from fitting a linear regression model to the data above.  Would you regard the intervals as equally likely to cover the observed sedation scores, or would you consider one of the intervals as more likely to cover the corresponding observed sedation score than the other?  Explain your reasoning in a sentence.
+
+Solution: The prediction interval corresponding to the cortisol level of 5.0 is more likely to cover the corresponding observed sedation score as opposed to the other option, because it is extremely wide due to the value of cortisol level falling outside the range of observed cortisol levels -- intervals get wider the farther they are from the mean of the predictor. 
+
+```{r}
+newCh <- data.frame(C=c(5.0,10.0))
+predict(lm, newdata = newCh, interval = 'prediction', level = 0.95)
+```
+
+
+
+2.	Suppose you are interested to compare whether there is a significant difference in the average number of hours of sleep per week night obtained by male and female UCLA undergraduates. Suppose the standard deviation of the number of hours of sleep per week night is 1 hour in both groups, and you would regard the result as scientifically interesting if there was a difference on average of as much as half an hour per week night.  Assume that plans call for a study with the same number of male and female undergraduates and that it is desired to have at least 80% power for a test at the $\alpha = 0.05$ level.  Drawing on tabled information in your course reader or another similar source, how many subjects per group would be needed?
+
+Solution:
+
+$H_0: \mu_{male} - \mu_{female} < 0.5$ and $H_A: \mu_{male} - \mu_{female} \geq 0.5$
+
+Using the two-sample t test power calculation, I anticipate a minimum of 64 subjects per group would be necessary to achieve 80% power at the $\alpha = 0.05$ level for this test.
+
+```{r}
+power.t.test(n = NULL, delta = 0.5, sd = 1, sig.level = 0.05, power = 0.80, type = "two.sample", alternative = "two.sided")
+```
+
+
+
+3.	Suppose you are asked to compare the proportions of male and female UCLA undergraduates who are able to continue for as long as 15 minutes on a treadmill stress test following a protocol where the slope of the incline and the speed of the treadmill increase in stages every 3 minutes.  Suppose also you are told it would be scientifically interesting if the difference in the proportions was as much as 10%.  Assume further that you do not have a good estimate in advance of the underlying proportions in the two groups but that regardless of the values of the underlying proportions, you would like to have at least 80% power to find a difference of as much as 10% in the proportions using a test at the $\alpha = 0.05$.  Drawing on tabled information in your course reader or another similar source, what would be a good total number of subjects to include in the study?  Explain your reasoning in a sentence or two.
+
+$H_0: p_{male} - p_{female} < 0.10$ and $H_A: p_{male} - p_{female} \geq 0.10$
+
+```{r}
+
+```
+
+
+
+4.	When patients are unable to eat for long periods, they must be given intravenous nutrients, a process called parenteral nutrition.  Unfortunately, patients on parenteral nutrition show increased calcium loss via their urine, sometimes losing more calcium than they are given in their intravenous fluids.  Such a calcium loss might contribute to bone loss as the body pulls calcium out of bones to try to keep the calcium level in the blood within the normal range.  In order to better understand the mechanisms of the calcium loss in urine, Lipkin and coworkers (American Journal of Clinical Nutrition, 1988; 47:515-523) measured urinary calcium UCa and related it to dietary calcium DCa , glomerular filtration rate Gfr  (a measure of kidney function), urinary sodium UNa , and dietary protein level DP .  The data are available for download from the web site for our text book: go to
+
+https://people.vetmed.wsu.edu/slinkerb/appliedregression/
+
+follow the link to “File downloads related to the book”, scroll down to “Data for Problems (Appendix D)”, and click on Table D-5 (where the order of the columns are as presented above:  UCa , DCa , Gfr , UNa , and DP ).  
+
+4.(a)	Using a computer to facilitate your analysis, fit simple regression models of UCa on each of the other four variables. Is there evidence of significant correlation between UCa and any of the other variables? What can you tell about the relative importance of these four variables in determining UCa ?
+
+Solution:
+
+```{r}
+
+```
+
+
+4.(b)	Carry out a multiple regression analysis of UCa¬  on all four of the other variables.  Comment on which variables seem to be important determinants of UCa .  Also comment on similarities and differences with the findings from part 4.(a), and on whether you regard the separate simple regression results or the multiple regression result as more useful.
+
+Solution:
+
+```{r}
+
+```
+
+
+
+5.	When antibiotics are given to fight infections, they must be administered in such a way that the blood level of the antibiotic is high enough to kill the bacteria responsible for the infection.  Because antibiotics are usually given periodically, the blood levels change over time, rising after an injection, then falling back down until the next injection.  The interval between injections of recently introduced antibiotics has been determined by extrapolating from studies of older antibiotics.  To update knowledge pertaining to dosing schedules, Vogelman and coworkers (Journal of Infectious Disease, 1988; 158: 831-847) studied the effect of different dosing intervals on the effectiveness of several newer antibiotics against a variety of bacteria in mice.  One trial was the effectiveness of gentamicin against the bacterium Escherichia coli.  As part of their assessment of the drug, they evaluated the effectiveness of gentamicin in killing E. coli as a function of the percentage of time the blood level of the drug remained above the effective level (the so-called mean inhibitory concentration M).  Effectiveness was evaluated in terms of the number of bacterial colonies C that could be grown from the infected mice after treatment with a given dosing schedule (known as “colony-forming units”, or CFU), where the lower the value of C, the more efficacious the antibiotic.  The data are available for download from the web site for our text book: go to
+
+https://people.vetmed.wsu.edu/slinkerb/appliedregression/
+
+following the link to “File downloads related to the book”, scrolling down to “Data for Problems (Appendix D)”, and clicking on Table D-3.  The first column, which can be labeled Y = “log CFU difference” and which can be treated as the outcome variable, is the difference between log (base 10) of the number of colony-forming units recorded after a period of antibiotic treatment and log (base 10) of the number of colony-forming units recorded before the period of antibiotic treatment.  The second column, which can be labeled X1 = “Percentage of 24-hour period above the mean inhibitory concentration M”.  The third column can be labeled X2 = “Dose code” (where “0” refers to 1-4 hour intervals and “1” refers to 6-12 hour intervals)”. 
+
+5.(a)  Perform the regression of Y on X1 for the cases where Dose code = 0, and comment on whether X1 is a significant predictor of Y.
+
+Solution:
+
+```{r}
+
+```
+
+
+5.(b)  For the cases where “Dose code” is equal to 0, produce a scatter plot of Y versus X1 , and comment on whether the plot looks linear.
+
+Solution:
+
+```{r}
+
+```
+
+
+5.(c)  Based on the information presented to you, does the direction of the coefficient of X1 suggest that a greater percentage of time above the mean inhibitory concentration M is beneficial, or that a lower percentage of time above M is beneficial?  Explain your reasoning in a sentence.
+
+Solution:
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+5.(d)  A web search on “colony-forming unit” yielded the following description (from Wikipedia):
+
+In microbiology, colony-forming unit (CFU or cfu) is a measure of viable bacterial or fungal numbers.  Unlike direct microscopic counts where all cells, dead and living, are counted, CFU measures viable cells. For convenience the results are given as CFU/mL (colony-forming units per milliliter) for liquids, and CFU/g (colony-forming units per gram) for solids.  A dilution made with bacteria and peptoned water is placed in an Agar plate ... and spread over the plate....  The theory behind the technique of CFU is to establish that a single bacterium can grow and become a colony via binary fission.  ... [The] technique allows the determination of the number of CFU per mL in the sample, and thus the microbiological load and the magnitude of the infection in humans or animals, or the degree of contamination in samples of water, vegetables, soil or fruits, and in industrial products and equipment.
+
+Why do you think investigators analyzing data from a dilution-based laboratory procedure might decide to perform regression analysis on log-transformed values rather than on the original CFU values?
+
+5.(e)   Define a new variable (say “X1squared”) where X1squared = (X1)2 , and perform a multiple regression analysis of Y versus X1 and X1squared.  Produce predicted values for each of the following possible values of X1:
+
+(i)	X1 = 20        (ii)  X1 = 40        (iii) X1 = 60        (iv)  X1 = 80.
+
+Also comment on whether there is a statistically significant departure from linearity in the data used to fit the model.
+
+5.(f)  In a setting where there is reason to think that the outcome variable would have a “monotone” (i.e., always increasing or always decreasing) pattern across the range of possible values of the predictor, one possible concern about including a “quadratic” predictor (reflecting the squared value of another predictor variable) is that a quadratic function would in general have the shape of a parabola, which informally speaking might be described as having either a U-shape or an inverted U-shape.  That is, the scientific context might imply that there should be a monotone pattern across the range of possible values of the predictor, but the mathematical form of the regression model would allow for a non-monotone pattern, with the predicted means going down and then up across the range of predictor values (or going up and then down across the range of predictor values).  Suppose it can be taken as a given in the context of the antibiotic study that the outcome should display a monotone pattern across the range of possible predictor values.  Is the fitted model from part (e) in conflict with the notion that the mean outcome follows a monotone pattern across the range of predictor values?  Support your answer with illustrative predicted values from the fitted regression model.
+
+
+ 
+6.  The summaries below and on the following page are taken from an analysis of deaths in London during the month of December, 1952, and their possible relationship to air pollution.  The 15 observations represent one observation for each day from December 1-15, 1952.  The variable “death” is a count of the number of deaths in London Administrative County on that day, the variable “smoke” is the mean atmospheric concentration of smoke particles at County Hall on the given day, and the variable “sulfur” is the mean atmospheric concentration of sulfur dioxide at County Hall on the given day.
+
+6.(a) The data point for December 6, 1952 featured smoke = 3.45, sulfur = .86, and death = 294.  For each regression model summarized below, obtain the predicted value and residual corresponding to this data point.
+Solution:
+
+6.(b)  Characterize the correlation between “smoke” and “death” according to whether it is positive or negative and according to whether it is significantly different from 0 or not.  Point to the evidence that supports your conclusions.
+Solution:
+
+6.(c)  In the regression of death on smoke, consider the p-value for the test of whether the coefficient of smoke is equal to zero versus the alternative that the coefficient of smoke is not equal to zero.  Is this p-value greater than 0.001, less than 0.001, precisely equal to 0.001, or is there not enough information to say?  Support your answer in a sentence.
+Solution:
+
+6.(d) What is the correlation between smoke and sulfur in this data set?
+
+6.(e)  Suppose you work in the public health department and are told that in addition to the type of coal that is most widely used in London factories (Type A), there are two alternative types of coal that cost the same as the most widely used type of coal. One alternative form of coal (Type B) produces less sulfur dioxide but more smoke.  The other alternative form of coal (Type C) produces both less sulfur dioxide and less smoke.  Based on everything you know, including the results of these regression analyses, which type of coal would you recommend for use in coal-burning factories?  Support your answer in a few sentences.
+
