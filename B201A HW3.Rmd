@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(kableExtra)
+library(ggpubr)
 ```
 
 Biostatistics 201A, Fall 2021
@@ -137,8 +138,17 @@ power.t.test(n = NULL, delta = 0.5, sd = 1, sig.level = 0.05, power = 0.80, type
 
 $H_0: p_{male} - p_{female} < 0.10$ and $H_A: p_{male} - p_{female} \geq 0.10$
 
-```{r}
+Solution: We want to the most conservative number for total number of subjects to include in the study given that we want an expected difference of at least 10% at 80% power. The most conservative number of subjects will come from proportion values close to 0.5 since as we approach p = 0.5, sample proportions will maximize their variance $\hat p (1-\hat p)$. Upon doing a search for sample size, we see that using the power.prop.test function we want a total of 784 subjects to include in the study, and using the unconditional approach for a two-sided two-proportion test we want 778 subjects to include in the study for a conservative estimate.   
 
+```{r}
+power.prop.test(n = NULL, p1 =0.55, p2 = 0.45, sig.level = 0.05, power = 0.80, alternative = "two.sided")
+
+p1 <- seq(0.2, 0.9, 0.05)
+p2 <- p1-0.1
+d <- 0
+totaln <- ( 2*(qnorm(0.80)+qnorm(0.975))^2 * (p1*(1-p1) + p2*(1-p2)) )/(p1 - p2 -d)^2
+round(max(totaln),2)
+plot(p1, totaln)
 ```
 
 
@@ -147,15 +157,29 @@ $H_0: p_{male} - p_{female} < 0.10$ and $H_A: p_{male} - p_{female} \geq 0.10$
 
 https://people.vetmed.wsu.edu/slinkerb/appliedregression/
 
-follow the link to “File downloads related to the book”, scroll down to “Data for Problems (Appendix D)”, and click on Table D-5 (where the order of the columns are as presented above:  UCa , DCa , Gfr , UNa , and DP ).  
+follow the link to “File downloads related to the book”, scroll down to “Data for Problems (Appendix D)”, and click on Table D-5 (where the order of the columns are as presented above:  UCa, DCa, Gfr, UNa, and DP).  
+
+```{r}
+q4data <- read_csv(file = "hw3q4data.csv", show_col_types = F)
+```
 
 4.(a)	Using a computer to facilitate your analysis, fit simple regression models of UCa on each of the other four variables. Is there evidence of significant correlation between UCa and any of the other variables? What can you tell about the relative importance of these four variables in determining UCa ?
 
-Solution:
+Solution: There is evidence of significant correlation between UCa and each of the other four variables at the $\alpha = 0.05$ level. 
 
 ```{r}
+ucadca <- lm(UCa~DCa, data = q4data)
+ucagfr <- lm(UCa~Gfr, data = q4data)
+ucauna <- lm(UCa~UNa, data = q4data)
+ucadp <- lm(UCa~DP, data = q4data)
 
+summary(ucadca)
+summary(ucagfr)
+summary(ucauna)
+summary(ucadp)
 ```
+
+
 
 
 4.(b)	Carry out a multiple regression analysis of UCa on all four of the other variables.  Comment on which variables seem to be important determinants of UCa. Also comment on similarities and differences with the findings from part 4.(a), and on whether you regard the separate simple regression results or the multiple regression result as more useful.
@@ -163,7 +187,9 @@ Solution:
 Solution:
 
 ```{r}
+ucaall <- lm(UCa ~ ., data = q4data)
 
+summary(ucaall)
 ```
 
 
@@ -174,20 +200,35 @@ https://people.vetmed.wsu.edu/slinkerb/appliedregression/
 
 following the link to “File downloads related to the book”, scrolling down to “Data for Problems (Appendix D)”, and clicking on Table D-3. The first column, which can be labeled Y = “log CFU difference” and which can be treated as the outcome variable, is the difference between log (base 10) of the number of colony-forming units recorded after a period of antibiotic treatment and log (base 10) of the number of colony-forming units recorded before the period of antibiotic treatment. The second column, which can be labeled X1 = “Percentage of 24-hour period above the mean inhibitory concentration M”. The third column can be labeled X2 = “Dose code” (where “0” refers to 1-4 hour intervals and “1” refers to 6-12 hour intervals)”. 
 
+
+```{r}
+q5data <- read_csv(file = "hw3q5data.csv", show_col_types = F)
+```
+
 5.(a) Perform the regression of Y on X1 for the cases where Dose code = 0, and comment on whether X1 is a significant predictor of Y.
 
 Solution:
 
 ```{r}
-
+yx1 <- lm(log_CFU~X1, data = q5data[q5data$dose_code == 0,])
+summary(yx1)
 ```
 
 
 5.(b)  For the cases where “Dose code” is equal to 0, produce a scatter plot of Y versus X1 , and comment on whether the plot looks linear.
 
-Solution:
+Solution: The plot looks linear at lower % values of X1, but gradually seems less linear and levels off at higher % values of X1. The loess curve superimposed on the scatter plot can illustrate a general negative slope trend that becomes less linear at higher % values of X1.
 
 ```{r}
+
+ggscatter(data = q5data[q5data$dose_code == 0,], x = "X1", y = "log_CFU", 
+          title = "Log_CFU vs X1 for 1-4 Hour Intervals", 
+          xlab = "% of 24-hour period above the mean inhibitory concentration M", 
+          ylab = "Log CFU", conf.int = T, add = "loess")
+ggscatter(data = q5data[q5data$dose_code == 0,], x = "X1", y = "log_CFU", 
+          title = "Log_CFU vs X1 for 1-4 Hour Intervals", 
+          xlab = "% of 24-hour period above the mean inhibitory concentration M", 
+          ylab = "Log CFU", conf.int = T, add = "reg.line")
 
 ```
 
@@ -202,17 +243,15 @@ Solution:
 
 
 
-
-
-
-
-
-
-5.(d)  A web search on “colony-forming unit” yielded the following description (from Wikipedia):
+5.(d) A web search on “colony-forming unit” yielded the following description (from Wikipedia):
 
 In microbiology, colony-forming unit (CFU or cfu) is a measure of viable bacterial or fungal numbers.  Unlike direct microscopic counts where all cells, dead and living, are counted, CFU measures viable cells. For convenience the results are given as CFU/mL (colony-forming units per milliliter) for liquids, and CFU/g (colony-forming units per gram) for solids.  A dilution made with bacteria and peptoned water is placed in an Agar plate ... and spread over the plate....  The theory behind the technique of CFU is to establish that a single bacterium can grow and become a colony via binary fission.  ... [The] technique allows the determination of the number of CFU per mL in the sample, and thus the microbiological load and the magnitude of the infection in humans or animals, or the degree of contamination in samples of water, vegetables, soil or fruits, and in industrial products and equipment.
 
 Why do you think investigators analyzing data from a dilution-based laboratory procedure might decide to perform regression analysis on log-transformed values rather than on the original CFU values?
+
+Solution:
+
+
 
 5.(e)   Define a new variable (say “X1squared”) where X1squared = (X1)2 , and perform a multiple regression analysis of Y versus X1 and X1squared.  Produce predicted values for each of the following possible values of X1:
 
@@ -220,22 +259,37 @@ Why do you think investigators analyzing data from a dilution-based laboratory p
 
 Also comment on whether there is a statistically significant departure from linearity in the data used to fit the model.
 
+Solution:
+
+
+
 5.(f)  In a setting where there is reason to think that the outcome variable would have a “monotone” (i.e., always increasing or always decreasing) pattern across the range of possible values of the predictor, one possible concern about including a “quadratic” predictor (reflecting the squared value of another predictor variable) is that a quadratic function would in general have the shape of a parabola, which informally speaking might be described as having either a U-shape or an inverted U-shape.  That is, the scientific context might imply that there should be a monotone pattern across the range of possible values of the predictor, but the mathematical form of the regression model would allow for a non-monotone pattern, with the predicted means going down and then up across the range of predictor values (or going up and then down across the range of predictor values).  Suppose it can be taken as a given in the context of the antibiotic study that the outcome should display a monotone pattern across the range of possible predictor values.  Is the fitted model from part (e) in conflict with the notion that the mean outcome follows a monotone pattern across the range of predictor values?  Support your answer with illustrative predicted values from the fitted regression model.
+
+Solution:
+
 
 
  
 6.  The summaries below and on the following page are taken from an analysis of deaths in London during the month of December, 1952, and their possible relationship to air pollution.  The 15 observations represent one observation for each day from December 1-15, 1952.  The variable “death” is a count of the number of deaths in London Administrative County on that day, the variable “smoke” is the mean atmospheric concentration of smoke particles at County Hall on the given day, and the variable “sulfur” is the mean atmospheric concentration of sulfur dioxide at County Hall on the given day.
 
 6.(a) The data point for December 6, 1952 featured smoke = 3.45, sulfur = .86, and death = 294.  For each regression model summarized below, obtain the predicted value and residual corresponding to this data point.
+
 Solution:
 
-6.(b)  Characterize the correlation between “smoke” and “death” according to whether it is positive or negative and according to whether it is significantly different from 0 or not.  Point to the evidence that supports your conclusions.
+
+6.(b) Characterize the correlation between “smoke” and “death” according to whether it is positive or negative and according to whether it is significantly different from 0 or not.  Point to the evidence that supports your conclusions.
 Solution:
 
-6.(c)  In the regression of death on smoke, consider the p-value for the test of whether the coefficient of smoke is equal to zero versus the alternative that the coefficient of smoke is not equal to zero.  Is this p-value greater than 0.001, less than 0.001, precisely equal to 0.001, or is there not enough information to say?  Support your answer in a sentence.
+6.(c) In the regression of death on smoke, consider the p-value for the test of whether the coefficient of smoke is equal to zero versus the alternative that the coefficient of smoke is not equal to zero.  Is this p-value greater than 0.001, less than 0.001, precisely equal to 0.001, or is there not enough information to say?  Support your answer in a sentence.
+
 Solution:
+
 
 6.(d) What is the correlation between smoke and sulfur in this data set?
 
-6.(e)  Suppose you work in the public health department and are told that in addition to the type of coal that is most widely used in London factories (Type A), there are two alternative types of coal that cost the same as the most widely used type of coal. One alternative form of coal (Type B) produces less sulfur dioxide but more smoke.  The other alternative form of coal (Type C) produces both less sulfur dioxide and less smoke.  Based on everything you know, including the results of these regression analyses, which type of coal would you recommend for use in coal-burning factories?  Support your answer in a few sentences.
+Solution:
+
+6.(e) Suppose you work in the public health department and are told that in addition to the type of coal that is most widely used in London factories (Type A), there are two alternative types of coal that cost the same as the most widely used type of coal. One alternative form of coal (Type B) produces less sulfur dioxide but more smoke.  The other alternative form of coal (Type C) produces both less sulfur dioxide and less smoke.  Based on everything you know, including the results of these regression analyses, which type of coal would you recommend for use in coal-burning factories?  Support your answer in a few sentences.
+
+Solution:
 
