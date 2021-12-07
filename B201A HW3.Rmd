@@ -1,7 +1,7 @@
 ---
 title: "B201A HW3"
 author: "Lillian Chen"
-date: "11/21/2021"
+date: "12/1/2021"
 output: pdf_document
 ---
 
@@ -12,10 +12,6 @@ library(tidyverse)
 library(kableExtra)
 library(ggpubr)
 ```
-
-Biostatistics 201A, Fall 2021
-Homework 3
-Due Wednesday, Dec. 1, 2021
 
 
 1. Consider further the data from Homework 2, Problem 3.
@@ -129,7 +125,8 @@ $H_0: \mu_{male} - \mu_{female} < 0.5$ and $H_A: \mu_{male} - \mu_{female} \geq 
 Using the two-sample t test power calculation, I anticipate a minimum of 64 subjects per group would be necessary to achieve 80% power at the $\alpha = 0.05$ level for this test.
 
 ```{r}
-power.t.test(n = NULL, delta = 0.5, sd = 1, sig.level = 0.05, power = 0.80, type = "two.sample", alternative = "two.sided")
+power.t.test(n = NULL, delta = 0.5, sd = 1, sig.level = 0.05, power = 0.80, 
+             type = "two.sample", alternative = "two.sided")
 ```
 
 
@@ -141,7 +138,8 @@ $H_0: p_{male} - p_{female} < 0.10$ and $H_A: p_{male} - p_{female} \geq 0.10$
 Solution: We want to the most conservative number for total number of subjects to include in the study given that we want an expected difference of at least 10% at 80% power. The most conservative number of subjects will come from proportion values close to 0.5 since as we approach p = 0.5, sample proportions will maximize their variance $\hat p (1-\hat p)$. Upon doing a search for sample size, we see that using the power.prop.test function we want a total of 784 subjects to include in the study, and using the unconditional approach for a two-sided two-proportion test we want 778 subjects to include in the study for a conservative estimate.   
 
 ```{r}
-power.prop.test(n = NULL, p1 =0.55, p2 = 0.45, sig.level = 0.05, power = 0.80, alternative = "two.sided")
+power.prop.test(n = NULL, p1 =0.55, p2 = 0.45, sig.level = 0.05, power = 0.80, 
+                alternative = "two.sided")
 
 p1 <- seq(0.2, 0.9, 0.05)
 p2 <- p1-0.1
@@ -165,9 +163,12 @@ q4data <- read_csv(file = "hw3q4data.csv", show_col_types = F)
 
 4.(a)	Using a computer to facilitate your analysis, fit simple regression models of UCa on each of the other four variables. Is there evidence of significant correlation between UCa and any of the other variables? What can you tell about the relative importance of these four variables in determining UCa ?
 
-Solution: There is evidence of significant correlation between UCa and each of the other four variables at the $\alpha = 0.05$ level. 
+Solution: There is evidence of significant correlation between UCa and each of the other four variables at the $\alpha = 0.05$ level. The p-values of the coefficients from each SLR are as follows: DCa (p < .001), Gfr (p = .034), UNa (p = .009), and DP (p < .001).
+
+To determine the relative importance of these four variables in determining UCa, we compare the magnitudes of standardized coefficients so that we can compare coefficients on the scale of standard deviations (for every 1 standard deviation change in X, there is an associated change in Y of $\beta_{st.}$ standard deviations). Based on the standardized coefficients, the relative importance of the four variables from most important to least important is as follows: DCa ($\beta_{st.} = 0.76$), UNa ($\beta_{st.} = 0.63$), DP ($\beta_{st.} = 0.49$), and Gfr ($\beta_{st.} = 0.41$).
 
 ```{r}
+
 ucadca <- lm(UCa~DCa, data = q4data)
 ucagfr <- lm(UCa~Gfr, data = q4data)
 ucauna <- lm(UCa~UNa, data = q4data)
@@ -177,6 +178,26 @@ summary(ucadca)
 summary(ucagfr)
 summary(ucauna)
 summary(ucadp)
+
+sy <- sd(q4data$UCa)
+sx1 <- sd(q4data$DCa)
+sx2 <- sd(q4data$Gfr)
+sx3 <- sd(q4data$UNa)
+sx4 <- sd(q4data$DP)
+
+std_b1 <- summary(ucadca)$coefficients[2, 1] * sx1 / sy
+std_b2 <- summary(ucagfr)$coefficients[2, 1] * sx2 / sy
+std_b4 <- summary(ucauna)$coefficients[2, 1] * sx3 / sy
+std_b3 <- summary(ucadp)$coefficients[2, 1] * sx4 / sy
+
+stbetas <- data.frame(variable = c("DCa", "Gfr", "UNa", "DP"),
+            beta_st = c(std_b1, std_b2, std_b3, std_b4))
+
+kbl(stbetas, booktabs = T) %>% 
+  kable_styling(position = "center",
+                latex_options = c("basic", "hold_position"))
+
+
 ```
 
 
@@ -184,12 +205,25 @@ summary(ucadp)
 
 4.(b)	Carry out a multiple regression analysis of UCa on all four of the other variables.  Comment on which variables seem to be important determinants of UCa. Also comment on similarities and differences with the findings from part 4.(a), and on whether you regard the separate simple regression results or the multiple regression result as more useful.
 
-Solution:
+Solution: Upon fitting a multiple regression of UCa on all four other variables, we see that DCa remains statistically significant (p < .001) and UNa remains statistically significant (p = 0.03) at the $\alpha = 0.05$ level. The other two variables have p-values of a much larger magnitude and can be considered both statistically and practically insignificant. 
+
+Obvious differences in the findings here are that the coefficients for DP and Gfr are no longer statistically significant, which makes sense because they are included in a model with more variables that may better explain the variance in the outcome. Additionally, the coefficient for DP has changed signs from positive to negative. The magnitudes for coefficients of Gfr and UNa decreased from the results in 4a, while the magnitude for the coefficient of DCa increased from the results in 4a. 
+
+The order of coefficients arranged by ascending p-value aligns with the order of relative importance arranged by descending standardized coefficient magnitude, which is a similarity between the findings in 4b with 4a.
+
+The multiple regression results are more useful because we can use this to both better inform our model and to remove unnecessary predictors that do not further explain the variance in the model. The multiple regression also has a higher $R^2$ attributed to the extra information included in the model so we gain knowledge using multiple covariates at a time.
+
+There is high collinearity between DP and DCa, so ideally we would leave out DP since the coefficient for DP was not statistically significant. Additionally, there is some collinearity observed between Gfr and UNa. Refitting the model to have predictors DCa and UNa, we see that we get a model with both coefficients remaining statistically significant and maintain a similar $R^2$ value as the full multiple regression model.
 
 ```{r}
 ucaall <- lm(UCa ~ ., data = q4data)
 
 summary(ucaall)
+
+corrplot::corrplot(cor(q4data[,2:5]), method = 'number')
+
+ucaedit <- lm(UCa ~ DCa + UNa, data = q4data)
+summary(ucaedit)
 ```
 
 
@@ -207,7 +241,7 @@ q5data <- read_csv(file = "hw3q5data.csv", show_col_types = F)
 
 5.(a) Perform the regression of Y on X1 for the cases where Dose code = 0, and comment on whether X1 is a significant predictor of Y.
 
-Solution:
+Solution: The regression of Y on X1 for the cases where Dose Code = 0 yields a coefficient estimate for X1 of -0.04, statistically significant at the $\alpha =0.05$ level (p < .001). It appears that X1 is a significant predictor of Y.
 
 ```{r}
 yx1 <- lm(log_CFU~X1, data = q5data[q5data$dose_code == 0,])
@@ -235,11 +269,7 @@ ggscatter(data = q5data[q5data$dose_code == 0,], x = "X1", y = "log_CFU",
 
 5.(c)  Based on the information presented to you, does the direction of the coefficient of X1 suggest that a greater percentage of time above the mean inhibitory concentration M is beneficial, or that a lower percentage of time above M is beneficial?  Explain your reasoning in a sentence.
 
-Solution:
-
-```{r}
-
-```
+Solution: As stated in the prompt, the lower the value of C, the more efficacious the antibiotic. In other words, the antibiotic is more efficacious when log CFU is low. Based on the information presented, the negative direction of the coefficient of X1 suggests that a greater percentage of time above the mean inhibitory concentration M is beneficial since it lowers the number of CFU observed, showing greater efficacy of the antibiotic.
 
 
 
@@ -249,9 +279,15 @@ In microbiology, colony-forming unit (CFU or cfu) is a measure of viable bacteri
 
 Why do you think investigators analyzing data from a dilution-based laboratory procedure might decide to perform regression analysis on log-transformed values rather than on the original CFU values?
 
-Solution:
+Solution: Examining the log-transformed values of CFU, we see that it is not quite a bell-shaped curve. However, transforming the log_CFU values back to the original scale we see that there is an extremely zero-inflated and right skewed distribution, indicating that analysis is best performed on the log CFU values to better meet model assumptions related to normality that are required in regression analysis.
 
-
+```{r}
+par(mfrow = c(1,2))
+hist(q5data$log_CFU, main = NULL, xlab = "log_CFU")
+title("Histogram of log_CFU")
+hist(exp(q5data$log_CFU), main = NULL, xlab = "CFU")
+title("Histogram of CFU")
+```
 
 5.(e)   Define a new variable (say “X1squared”) where X1squared = (X1)2 , and perform a multiple regression analysis of Y versus X1 and X1squared.  Produce predicted values for each of the following possible values of X1:
 
@@ -259,37 +295,115 @@ Solution:
 
 Also comment on whether there is a statistically significant departure from linearity in the data used to fit the model.
 
-Solution:
+Solution: The predicted values for the four values of X1 (20, 40, 60, 80) are as follows: i) 0.969, ii) -0.627, iii) -1.653, and iv) -2.109. There is a statistically significant departure from linearity in the data used to fit the model since the quadratic term is statistically significant in the multiple regression model, and this is further corroborated by the shape of the loess line in the residuals vs. fitted values plot below.
 
+```{r}
+
+q5data$X1squared <- (q5data$X1)^2
+logCFUmlr <- lm(log_CFU ~ X1 + X1squared, data = q5data[q5data$dose_code == 0,])
+summary(logCFUmlr)
+
+intercept <- summary(logCFUmlr)$coefficients[1, 1]
+x1_coef <- summary(logCFUmlr)$coefficients[2, 1]
+x1sq_coef <- summary(logCFUmlr)$coefficients[3, 1]
+
+yhat <- function(x){
+  y <- intercept + (x1_coef * x) + (x1sq_coef * (x^2))
+  return(y)
+}
+X1_20 <- yhat(20) # prediction for X1 = 20
+X1_40 <- yhat(40) # prediction for X1 = 40
+X1_60 <- yhat(60) # prediction for X1 = 60
+X1_80 <- yhat(80) # prediction for X1 = 80
+X1est <- data.frame(X1 = c(20,40,60,80),
+                    predicted = round(c(X1_20, X1_40, X1_60, X1_80),2))
+kbl(X1est, booktabs = T) %>% 
+  kable_styling(position = "center",
+                latex_options = c("basic", "hold_position"))
+
+#residual vs fitted plot
+plot(logCFUmlr, which = 1)
+```
 
 
 5.(f)  In a setting where there is reason to think that the outcome variable would have a “monotone” (i.e., always increasing or always decreasing) pattern across the range of possible values of the predictor, one possible concern about including a “quadratic” predictor (reflecting the squared value of another predictor variable) is that a quadratic function would in general have the shape of a parabola, which informally speaking might be described as having either a U-shape or an inverted U-shape.  That is, the scientific context might imply that there should be a monotone pattern across the range of possible values of the predictor, but the mathematical form of the regression model would allow for a non-monotone pattern, with the predicted means going down and then up across the range of predictor values (or going up and then down across the range of predictor values).  Suppose it can be taken as a given in the context of the antibiotic study that the outcome should display a monotone pattern across the range of possible predictor values.  Is the fitted model from part (e) in conflict with the notion that the mean outcome follows a monotone pattern across the range of predictor values?  Support your answer with illustrative predicted values from the fitted regression model.
 
-Solution:
+Solution: The fitted regression model from part (e) may be in conflict with the notion that the predicted mean outcome follows a monotone pattern across the range of predictor values. We can see that the predicted values from the model generally follow a monotonic pattern, but the X1 values from 85-100 begin increasing slightly instead of following the same monotonic trend for all values before that. 
 
+```{r}
+x <- seq(0,100,5)
+yhats <- yhat(x)
 
+plot(x, yhats)
+title("Predicted Means vs Predictor (X1) Values")
+```
 
- 
 6.  The summaries below and on the following page are taken from an analysis of deaths in London during the month of December, 1952, and their possible relationship to air pollution.  The 15 observations represent one observation for each day from December 1-15, 1952.  The variable “death” is a count of the number of deaths in London Administrative County on that day, the variable “smoke” is the mean atmospheric concentration of smoke particles at County Hall on the given day, and the variable “sulfur” is the mean atmospheric concentration of sulfur dioxide at County Hall on the given day.
 
 6.(a) The data point for December 6, 1952 featured smoke = 3.45, sulfur = .86, and death = 294.  For each regression model summarized below, obtain the predicted value and residual corresponding to this data point.
 
-Solution:
+Solution: See table below.
+
+```{r}
+# data point values
+smoke <- 3.45
+sulfur <- 0.86
+death <- 294
+
+# Model 1: death = b0 + b1*smoke + e
+mod1_estimate <- 171.81881 + 63.76092 * smoke
+
+# Model 2: death = b0 + b1*sulfur + e
+mod2_estimate <- 144.11078 + 256.23556 * sulfur
+
+# Model 3: death = b0 + b1*smoke + b2*sulfur + e
+mod3_estimate <- 89.51080 - 220.32438 * smoke + 1051.81646 * sulfur
+
+# calculating residuals for each model estimate
+mod1_rsd <- death - mod1_estimate
+mod2_rsd <- death - mod2_estimate
+mod3_rsd <- death - mod3_estimate
+
+tbl6a <- data.frame(model = c("Model 1", "Model 2", "Model 3"),
+                    predicted = round(c(mod1_estimate, mod2_estimate, mod3_estimate),2),
+                    residual = round(c(mod1_rsd, mod2_rsd, mod3_rsd),2))
+
+# summary of predicted values and residuals for all models
+kbl(tbl6a, booktabs = T) %>% 
+  kable_styling(position = "center",
+                latex_options = c("basic", "hold_position"))
+
+```
 
 
 6.(b) Characterize the correlation between “smoke” and “death” according to whether it is positive or negative and according to whether it is significantly different from 0 or not.  Point to the evidence that supports your conclusions.
-Solution:
+
+Solution: The correlation between an outcome and predictor can be determined by using the formula $\beta = r \frac{s_y}{s_x}$. Solving for r, we get r = 0.756. Examining values of Pearson's R associated with 13 (df = 15-2) degrees of freedom, the critical value for a two-tailed test at the $\alpha = 0.05$ level is 0.514 (from table of critical values of Pearson's $\rho$. Since our calculated value is greater than the critical value, we reject the null and conclude that the correlation between "smoke" and "death" is significantly different from 0 (p < .001), and we also know that it has a positive moderately strong correlation based on its sign and magnitude.
+
+```{r}
+s_x <- 1.548344 # sample sd from q6 data summary
+s_y <- 130.5898 # sample sd from q6 data summary
+beta <- 63.76092 # coef estimate from q6 model 1 summary
+r <- beta*(s_x/s_y)
+r
+
+# calculate t for calculated r
+tstar <- r*sqrt((15-2)/(1-r^2))
+# p value associated with calculated t
+pt(tstar, df = 15-2, lower.tail = F)
+```
+
 
 6.(c) In the regression of death on smoke, consider the p-value for the test of whether the coefficient of smoke is equal to zero versus the alternative that the coefficient of smoke is not equal to zero.  Is this p-value greater than 0.001, less than 0.001, precisely equal to 0.001, or is there not enough information to say?  Support your answer in a sentence.
 
-Solution:
-
+Solution: In the regression of death on smoke as seen in the results from Model 1, the t-value is calculated to be 4.16 with an associated p-value of 0.001. There is enough information to say so, given that the regression coefficient and standard error are all available in the calculation. We also know that the model is a fairly good fit (p-value of F = .0011) so we can trust the estimates of the intercept and coefficient given in the output.
 
 6.(d) What is the correlation between smoke and sulfur in this data set?
 
-Solution:
+Solution: To examine the correlation between smoke and sulfur, we look to the Variance Inflation Factor (VIF), which can be calculated by $VIF = \frac{1}{2-r_k^2}$, with $r_k^2$ representing the coefficient of determination between two covariates (in this case, between smoke and sulfur). The model output for Model 3 already gives us the VIF = 40.458. The VIF is significantly greater than 10 (rule of thumb for VIF), indicating that there issues with collinearity that may affect the precision of coefficient estimates.
 
 6.(e) Suppose you work in the public health department and are told that in addition to the type of coal that is most widely used in London factories (Type A), there are two alternative types of coal that cost the same as the most widely used type of coal. One alternative form of coal (Type B) produces less sulfur dioxide but more smoke.  The other alternative form of coal (Type C) produces both less sulfur dioxide and less smoke.  Based on everything you know, including the results of these regression analyses, which type of coal would you recommend for use in coal-burning factories?  Support your answer in a few sentences.
 
-Solution:
+Solution: Due to the VIF results in the multiple regression, it is better to model smoke and sulfur as predictors in separate models (Model 1 and Model 2). The coefficient estimates for smoke and sulfur in Model 1 and Model 2 are both positive, indicating positive slopes for the best fit line of smoke and death and sulfur and death. Based on these relationships, it is natural to recommend the Type C alternative form of coal, since it produces both less sulfur and less smoke and will minimize the estimate of death in both of these models.
+
 
