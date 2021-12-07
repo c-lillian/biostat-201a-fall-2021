@@ -2,7 +2,9 @@
 title: "b201a final code"
 author: "Lillian Chen"
 date: "12/5/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -14,26 +16,15 @@ library(ggplot2)
 ```
 
 
-```{r}
-u <- seq(0.04, 1, 0.04)
-x <- cos(pi*u)
-e <- dnorm(x, mean = 0, sd = 0.01)
-y <- sin(pi*u) + e
-
-data <- data.frame(u=u, x = x, x2 = x^2, y = y)
-
-ggscatter(data = data, x = "x", y = "y", add = "reg.line", cor.coef = T)
-ggscatter(data = data, x = "x2", y = "y", add = "reg.line", cor.coef = T)
-
-plot(x,y)
-points(x^2,y, col="blue")
-
-lm(y~x, data = data)
-lm(y~x+x2, data=data)
+```{r q1}
+#1a
+d<- 0.68
+pnorm(d, mean=0, sd=1)
 
 ```
 
-```{r}
+
+```{r q2}
 options(knitr.kable.NA = '')
 k <- 3 
 N <- 12
@@ -70,6 +61,103 @@ abdata <- data.frame(speed = c("penicillin", "tetracycline", "erythromycin"),
                        sd = c(3.22,3.17,1.81))
 
 #using anovaMean function from package HH for one-way ANOVA with summary statistics
-HH::anovaMean(abdata$speed, abdata$n, abdata$means, abdata$sd, ylabel=c("antibiotic"))
+anova <- HH::anovaMean(abdata$speed, abdata$n, abdata$means, abdata$sd, ylabel=c("antibiotic"))
+
+anova
+
+# 2c
+(Rsq <- 1 - anova$`Sum of Sq`[2]/sum(anova$`Sum of Sq`))
+
+# 2d: for bonferroni correction, divide by # pairwise comparisons for 
+# new alpha for each individual test to maintain exp-wise error rate
+(astar <- 0.05/3)
+
+
+#2e
+SSEfull <- 24.21 
+SST <- 403.97 # same total sum of squares
+(SSmodfull <- SST - SSEfull)
+SSmodreduced <- 332.95 # SSmod from ANOVA table
+dfmodfull <- 3 # 4 - 1 (k=4 comes from 3 groups + additional age predictor)
+dfmodreduced <- 2 # dfmod from ANOVA table
+dfefull <- 8 # 12 - 4 (N=12, k=4)
+
+# calculate partial F ratio
+# numerator (MS additional explained) 
+(num <- (SSmodfull - SSmodreduced)/(dfmodfull-dfmodreduced))
+
+#denominator (MS still unexplained)
+(denom <- SSEfull/dfefull)
+
+# partial F ratio
+(Fpartial <- num/denom)
+
+# critical value of F with degrees of freedom 1, 8 at alpha=0.05
+(Fstar <- qf(0.95,1,8))
+
+# p-value for observed Fpartial with degrees of freedom 1, 8
+(pvalue <- 1 - pf(Fpartial, 1, 8))
+
+```
+```{r q3}
+# 3a 
+df_f <- 110
+df_m <- 125
+N_f <- df_f + 1
+N_m <- df_m + 1
+(Ntot <- N_f + N_m)
+
+# 3b
+regf <- function(x){
+  y <- -153.12891 + 4.16361*x
+  return(y)}
+
+regm <- function(x){
+  y <- -125.69807 + 3.68977*x
+  return(y)}
+
+regf(60) # predicted weight for girl with height = 60 in
+regm(60) # predicted weight for boy with height = 60 in
+
+# 3c
+SST_f <- 38121.10811
+df_f <- 110
+SST_m <- 49840.41468
+df_m <- 125
+(svar_f <- SST_f/df_f) # sample variance of weight in girls
+(svar_m <- SST_m/df_m) # sample variance of weight in boys
+
+# 3f
+# ref group = girls
+B0 <- -153.13 # intercept when indicator is 0
+B1 <- 4.16 # slope when indicator is 0 
+(B2 <- -125.70 - B0) # additional contribution to intercept when indicator is 1
+(B3 <- 3.69 - B1) # additional contribution to intercept when indicator is 1
+SSR <- 16614.59 + 18714.35 # SSR from both female and male models
+
+(MSE <- SSR/(237-3)) # residual variance or MSE; 237 observations - 3 parameters
+
+
+
 ```
 
+
+```{r q4}
+
+u <- seq(0.04, 1, 0.04)
+x <- cos(pi*u)
+e <- dnorm(x, mean = 0, sd = 0.01)
+y <- sin(pi*u) + e
+
+data <- data.frame(u=u, x = x, x2 = x^2, y = y)
+
+ggscatter(data = data, x = "x", y = "y", add = "reg.line", cor.coef = T)
+ggscatter(data = data, x = "x2", y = "y", add = "reg.line", cor.coef = T)
+
+plot(x,y)
+points(x^2,y, col="blue")
+
+lm(y~x, data = data)
+lm(y~x+x2, data=data)
+
+```
