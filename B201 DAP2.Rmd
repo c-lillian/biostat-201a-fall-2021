@@ -213,11 +213,15 @@ theme_gtsummary_compact()
 aiclm %>% 
   tbl_regression() %>% 
   as_gt() %>% 
+  gt::tab_source_note(gt::md("This model has a multiple R-squared of 0.65 and adjusted R-squared of 0.62")) %>% 
+  gt::tab_source_note(gt::md("F-statistic: 18.35 on 41 and 398 DF, p-value: < 0.001")) %>% 
   gt::gtsave(filename = "aicmodel.html")
 
 biclm %>% 
   tbl_regression() %>% 
   as_gt() %>% 
+  gt::tab_source_note(gt::md("This model has a multiple R-squared of 0.59 and adjusted R-squared of 0.58")) %>% 
+  gt::tab_source_note(gt::md("F-statistic: 34.2 on 18 and 421 DF, p-value: < 0.001")) %>% 
   gt::gtsave(filename = "bicmodel.html")
 
 
