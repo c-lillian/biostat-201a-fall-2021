@@ -9,12 +9,217 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
-library(MAss)
+library(MASS)
+library(Hmisc)
+library(broom)
+library(purrr)
+library(kableExtra)
+library(magick)
+library(webshot)
+library(gtsummary)
+
+
 ```
 
 
 
 ```{r}
+
+cdidata <- read_csv(file = "cdi_data.csv", show_col_types = F)
+
+cdidata <- cdidata %>% 
+  mutate(CRM1000 = crimes/(pop/1000),
+         region = as.factor(region),
+         log_area = log(area),
+         log_pop = log(pop),
+         log_pop18 = log(pop18),
+         log_pop65 = log(pop65),
+         log_docs = log(docs),
+         log_beds = log(beds),
+         log_crimes = log(crimes),
+         log_hsgrad = log(hsgrad),
+         log_bagrad = log(bagrad),
+         log_poverty = log(poverty),
+         log_unemp = log(unemp),
+         log_pcincome = log(pcincome),
+         log_totalinc = log(totalinc),
+         log_CRM1000 = log(CRM1000))
+
+hist.data.frame(cdidata)
+
+```
+
+
+```{r}
+
+# left out id, cty, state, crimes
+# all variables aside from hsgrad and region are log transformed
+selectcdi <- cdidata %>% 
+  dplyr::select(c(log_CRM1000, log_area, log_pop, log_pop18, log_pop65, log_docs, 
+                  log_beds, hsgrad, log_bagrad, log_poverty, log_unemp, 
+                  log_pcincome, log_totalinc, region))
+```
+
+
+```{r}
+# slr for selectcdi vars
+s1 <-  lm(log_CRM1000~log_area, data=selectcdi)
+s2 <-  lm(log_CRM1000~log_pop, data=selectcdi)
+s3 <-  lm(log_CRM1000~log_pop18, data=selectcdi)
+s4 <-  lm(log_CRM1000~log_pop65, data=selectcdi)
+s5 <-  lm(log_CRM1000~log_docs, data=selectcdi)
+s6 <-  lm(log_CRM1000~log_beds, data=selectcdi)
+s7 <-  lm(log_CRM1000~hsgrad, data=selectcdi)
+s8 <-  lm(log_CRM1000~log_bagrad, data=selectcdi)
+s9 <-  lm(log_CRM1000~log_poverty, data=selectcdi)
+s10 <- lm(log_CRM1000~log_unemp, data=selectcdi)
+s11 <- lm(log_CRM1000~log_pcincome, data=selectcdi)
+s12 <- lm(log_CRM1000~log_totalinc, data=selectcdi)
+s13 <- lm(log_CRM1000~region, data=selectcdi)
+
+varnames <- c("log land area (mi)", 
+              "log total population", 
+              "log percent of population 18+", 
+              "log percent of population 65+", 
+              "log active physicians", 
+              "log hospital beds",
+              "percent high school graduates", 
+              "log percent bachelor's degrees", 
+              "log percent below poverty level", 
+              "log percent unemployment", 
+              "log per capita income",
+              "log total income", 
+              "North Central (ref: Northeast)", 
+              "South (ref: Northeast)", 
+              "West (ref: Northeast)")
+
+b <- c(summary(s1)$coefficients[2,1],
+       summary(s2)$coefficients[2,1],
+       summary(s3)$coefficients[2,1],
+       summary(s4)$coefficients[2,1],
+       summary(s5)$coefficients[2,1],
+       summary(s6)$coefficients[2,1],
+       summary(s7)$coefficients[2,1],
+       summary(s8)$coefficients[2,1],
+       summary(s9)$coefficients[2,1],
+       summary(s10)$coefficients[2,1],
+       summary(s11)$coefficients[2,1],
+       summary(s12)$coefficients[2,1],
+       summary(s13)$coefficients[2,1],
+       summary(s13)$coefficients[3,1],
+       summary(s13)$coefficients[4,1])
+
+p <- c(summary(s1)$coefficients[2,4],
+       summary(s2)$coefficients[2,4],
+       summary(s3)$coefficients[2,4],
+       summary(s4)$coefficients[2,4],
+       summary(s5)$coefficients[2,4],
+       summary(s6)$coefficients[2,4],
+       summary(s7)$coefficients[2,4],
+       summary(s8)$coefficients[2,4],
+       summary(s9)$coefficients[2,4],
+       summary(s10)$coefficients[2,4],
+       summary(s11)$coefficients[2,4],
+       summary(s12)$coefficients[2,4],
+       summary(s13)$coefficients[2,4],
+       summary(s13)$coefficients[3,4],
+       summary(s13)$coefficients[4,4])
+
+
+slrsummary <- data.frame(Variable = varnames,
+                     Coefficient = round(b,3), 
+                     pvalue = round(p,4))
+
+
+kbl(slrsummary, booktabs =T, 
+    caption = "Simple Linear Regression of Crime Per 1000 on Predictor") %>% 
+  kable_classic(full_width = F, html_font = "Cambria") %>% 
+  save_kable(file = "slr.png")
+    
+
+```
+
+```{r}
+
+#model with no interactions
+main1 <- lm(log_CRM1000 ~ ., data = selectcdi)
+summary(main1)
+
+# based on corrplot, significant correlation between the following pairs:
+# log_pop/log_docs (0.9), log_pop/log_beds (0.84), log_pop/log_totalinc (0.98)
+# log_docs/log_beds (0.9), log_docs/log_total_inc (0.91), log_beds/log_totalinc (0.81)
+
+#model with no interactions, excluding log_pop and log_docs
+
+main2 <- lm(log_CRM1000 ~ . -log_pop -log_docs, data = selectcdi)
+summary(main2)
+
+theme_gtsummary_journal(journal = "jama")
+#> Setting theme `JAMA`
+theme_gtsummary_compact()
+#> Setting theme `Compact`
+
+main2 %>% 
+  tbl_regression() %>% 
+  as_gt() %>%
+  gt::gtsave(filename = "finalmaineffects.html")
+
+mainvars <- selectcdi %>% 
+  dplyr::select(-log_pop, -log_docs)
+
+
+```
+
+
+```{r}
+
+# model with 2-way interactions
+full1 <- lm(log_CRM1000~.^2, data = mainvars)
+summary(full1)
+steplm1 <- stepAIC(full1, direction = "both") # stepwise based on AIC
+
+n <- nrow(mainvars)
+steplm2 <- stepAIC(full1, direction = "both", k = log(n)) # stepwise based on BIC/SBC
+
+steplm1$anova #AIC stepwise selection
+steplm2$anova #BIC stepwise selection
+```
+```{r}
+# summaries of final models 
+
+aiclm <- lm(log_CRM1000 ~ log_area + log_pop18 + log_pop65 + log_beds + hsgrad + 
+    log_bagrad + log_poverty + log_unemp + log_pcincome + log_totalinc + 
+    region + log_area:log_pop18 + log_area:log_unemp + log_area:log_pcincome + 
+    log_pop18:log_pop65 + log_pop18:log_bagrad + log_pop18:log_unemp + 
+    log_pop18:log_pcincome + log_pop18:region + log_pop65:region + 
+    log_beds:log_poverty + log_beds:log_totalinc + log_beds:region + 
+    hsgrad:log_bagrad + hsgrad:region + log_bagrad:log_pcincome + 
+    log_poverty:log_totalinc + log_unemp:region + hsgrad:log_pcincome, data=mainvars)
+
+biclm <- lm(log_CRM1000 ~ log_area + log_pop18 + log_beds + hsgrad + log_bagrad + 
+    log_poverty + log_unemp + log_pcincome + log_totalinc + region + 
+    log_area:log_beds + log_area:log_poverty + log_area:log_unemp + 
+    log_beds:log_totalinc + hsgrad:log_bagrad + log_bagrad:log_pcincome, data=mainvars)
+
+
+summary(aiclm)
+summary(biclm)
+
+theme_gtsummary_journal(journal = "jama")
+#> Setting theme `JAMA`
+theme_gtsummary_compact()
+#> Setting theme `Compact`
+
+aiclm %>% 
+  tbl_regression() %>% 
+  as_gt() %>% 
+  gt::gtsave(filename = "aicmodel.html")
+
+biclm %>% 
+  tbl_regression() %>% 
+  as_gt() %>% 
+  gt::gtsave(filename = "bicmodel.html")
+
 
 ```
 
