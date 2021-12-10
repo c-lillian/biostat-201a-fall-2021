@@ -13,10 +13,8 @@ library(MASS)
 library(Hmisc)
 library(broom)
 library(purrr)
-library(kableExtra)
-library(magick)
-library(webshot)
 library(gtsummary)
+library(gt)
 
 
 ```
@@ -24,12 +22,53 @@ library(gtsummary)
 
 
 ```{r}
-
 cdidata <- read_csv(file = "cdi_data.csv", show_col_types = F)
 
+table1data <-cdidata %>% 
+  dplyr::select(-id, -cty, -state) %>% 
+  mutate(region = fct_recode(factor(region), 
+                             "Northeast" = "1", 
+                             "North Central" = "2", 
+                             "South" = "3", 
+                             "West" = "4")) %>% 
+  labelled::set_variable_labels(area = "Land area (mi)",
+                                pop = "Total population",
+                                pop18 = "Percent of population aged 18-34",
+                                pop65 = "Percent of population aged 65+",
+                                docs = "Number of active physicians",
+                                beds = "Number of hospital beds",
+                                crimes = "Total serious crimes",
+                                hsgrad = "Percent high school graduates",
+                                bagrad = "Percent bachelor’s degrees",
+                                poverty = "Percent below poverty level",
+                                unemp = "Percent unemployment",
+                                pcincome = "Per capita income (USD)",
+                                totalinc = "Total personal income (millions USD)",
+                                region = "Geographic region")
+
+# summary characteristics of initial dataset
+reset_gtsummary_theme()
+theme_gtsummary_journal(journal = "jama")
+theme_gtsummary_mean_sd()
+theme_gtsummary_compact()
+
+table1data %>% 
+  tbl_summary() %>% 
+  modify_caption("**Summary of U.S. County Characteristics**") %>% 
+  as_gt() %>%
+  gt::gtsave(filename = "table1.html")
+
+```
+
+
+```{r}
 cdidata <- cdidata %>% 
   mutate(CRM1000 = crimes/(pop/1000),
-         region = as.factor(region),
+         region = fct_recode(factor(region), 
+                             "Northeast" = "1", 
+                             "North Central" = "2", 
+                             "South" = "3", 
+                             "West" = "4"),
          log_area = log(area),
          log_pop = log(pop),
          log_pop18 = log(pop18),
@@ -50,6 +89,7 @@ hist.data.frame(cdidata)
 ```
 
 
+
 ```{r}
 
 # left out id, cty, state, crimes
@@ -57,7 +97,21 @@ hist.data.frame(cdidata)
 selectcdi <- cdidata %>% 
   dplyr::select(c(log_CRM1000, log_area, log_pop, log_pop18, log_pop65, log_docs, 
                   log_beds, hsgrad, log_bagrad, log_poverty, log_unemp, 
-                  log_pcincome, log_totalinc, region))
+                  log_pcincome, log_totalinc, region)) %>% 
+  labelled::set_variable_labels(log_area = "Log land area (mi)",
+                                log_pop = "Log total population",
+                                log_pop18 = "Log percent of population aged 18-34",
+                                log_pop65 = "Log percent of population aged 65+",
+                                log_docs = "Log number of active physicians",
+                                log_beds = "Log number of hospital beds",
+                                log_CRM1000 = "Log total serious crimes per 1000 population",
+                                hsgrad = "Percent high school graduates",
+                                log_bagrad = "Log percent bachelor’s degrees",
+                                log_poverty = "Log percent below poverty level",
+                                log_unemp = "Log percent unemployment",
+                                log_pcincome = "Log per capita income (USD)",
+                                log_totalinc = "Log total personal income (millions USD)",
+                                region = "Geographic region")
 ```
 
 
@@ -77,18 +131,18 @@ s11 <- lm(log_CRM1000~log_pcincome, data=selectcdi)
 s12 <- lm(log_CRM1000~log_totalinc, data=selectcdi)
 s13 <- lm(log_CRM1000~region, data=selectcdi)
 
-varnames <- c("log land area (mi)", 
-              "log total population", 
-              "log percent of population 18+", 
-              "log percent of population 65+", 
-              "log active physicians", 
-              "log hospital beds",
-              "percent high school graduates", 
-              "log percent bachelor's degrees", 
-              "log percent below poverty level", 
-              "log percent unemployment", 
-              "log per capita income",
-              "log total income", 
+varnames <- c("Log land area (mi)", 
+              "Log total population", 
+              "Log percent of population aged 18-34", 
+              "Log percent of population 65+", 
+              "Log number of active physicians", 
+              "Log number of hospital beds",
+              "Percent high school graduates", 
+              "Log percent bachelor's degrees", 
+              "Log percent below poverty level", 
+              "Log percent unemployment", 
+              "Log per capita income (USD)",
+              "Log total personal income (millions USD)", 
               "North Central (ref: Northeast)", 
               "South (ref: Northeast)", 
               "West (ref: Northeast)")
@@ -128,15 +182,16 @@ p <- c(summary(s1)$coefficients[2,4],
 
 slrsummary <- data.frame(Variable = varnames,
                      Coefficient = round(b,3), 
-                     pvalue = round(p,4))
+                     pvalue = round(p,3))
 
+slrsummary$pvalue[slrsummary$pvalue == 0.000] = "<0.001"
 
-kbl(slrsummary, booktabs =T, 
-    caption = "Simple Linear Regression of Crime Per 1000 on Predictor") %>% 
-  kable_classic(full_width = F, html_font = "Cambria") %>% 
-  save_kable(file = "slr.png")
     
-
+slrsummary %>% 
+  gt() %>% 
+  tab_header(title = md("**Simple Linear Regression of Crime Rate** <br>
+                        **per 1000 Population on Each Variable**")) %>% 
+  gtsave(filename = "slr.html")
 ```
 
 ```{r}
@@ -161,6 +216,8 @@ theme_gtsummary_compact()
 
 main2 %>% 
   tbl_regression() %>% 
+  bold_p() %>% 
+  modify_caption("**Main Effects Multiple Regression Model of Log Crime Rate on 11 Predictors**") %>% 
   as_gt() %>%
   gt::gtsave(filename = "finalmaineffects.html")
 
@@ -212,6 +269,7 @@ theme_gtsummary_compact()
 
 aiclm %>% 
   tbl_regression() %>% 
+  bold_p() %>% 
   as_gt() %>% 
   gt::tab_source_note(gt::md("This model has a multiple R-squared of 0.65 and adjusted R-squared of 0.62")) %>% 
   gt::tab_source_note(gt::md("F-statistic: 18.35 on 41 and 398 DF, p-value: < 0.001")) %>% 
@@ -219,6 +277,7 @@ aiclm %>%
 
 biclm %>% 
   tbl_regression() %>% 
+  bold_p() %>% 
   as_gt() %>% 
   gt::tab_source_note(gt::md("This model has a multiple R-squared of 0.59 and adjusted R-squared of 0.58")) %>% 
   gt::tab_source_note(gt::md("F-statistic: 34.2 on 18 and 421 DF, p-value: < 0.001")) %>% 
